@@ -137,11 +137,9 @@ def plan_route(
         if best_next is None:
             break
 
-        # commit next
         travel_time = float(tm[current][best_next])
         stay_time = int(venues[best_next].get("service_time_min", 60) or 60)
 
-        # final guard (paranoid but safe)
         if not within_time(time_spent, travel_time, stay_time):
             break
 
@@ -151,7 +149,6 @@ def plan_route(
         current = best_next
 
         if route_cost(route) > budget:
-            # remove the last venue and break out — budget blown
             route.pop()
             break
 
