@@ -217,7 +217,7 @@ def get_plan(
 
     # Otherwise, call the solver on the filtered set
     # Multiply budget by group size so per-person budget scales
-    effective_budget = int(budget) * max(group_size, 1)
+    effective_budget = int(budget)
 
     try:
         # Solve on the filtered problem if we filtered; else on the full set

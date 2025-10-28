@@ -150,6 +150,11 @@ def plan_route(
         time_spent += int(round(travel_time + stay_time))
         current = best_next
 
+        if route_cost(route) > budget:
+            # remove the last venue and break out — budget blown
+            route.pop()
+            break
+
     total_cost = route_cost(route)
     return {
         "route_indices": route,
