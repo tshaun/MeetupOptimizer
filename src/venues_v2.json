@@ -504,8 +504,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 90,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": "Chinese, $20, 1.5h"
   },
@@ -806,8 +806,8 @@
     "lng": 103.842,
     "open_windows": [
       [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
+        "2025-10-29T11:00:00+08:00",
+        "2025-10-29T22:00:00+08:00"
       ]
     ],
     "service_time_min": 60,
@@ -861,8 +861,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 50,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": "Dinner, $50, 2h"
   },
@@ -980,8 +980,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 300,
-    "cost_estimate_per_person": 60,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": "Theme park, $60, 5h"
   },
@@ -1082,8 +1082,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1116,8 +1116,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1133,8 +1133,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1150,8 +1150,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1167,8 +1167,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1184,8 +1184,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1201,8 +1201,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1218,8 +1218,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1235,8 +1235,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": ""
   },
@@ -1286,8 +1286,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": "Chinese, $20, 1h"
   },
@@ -1299,8 +1299,8 @@
     "lng": 103.846877,
     "open_windows": [
       [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
+        "2025-10-29T11:00:00+08:00",
+        "2025-10-29T22:00:00+08:00"
       ]
     ],
     "service_time_min": 90,
@@ -1384,8 +1384,8 @@
     "lng": 103.856563,
     "open_windows": [
       [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
+        "2025-10-29T11:00:00+08:00",
+        "2025-10-29T22:00:00+08:00"
       ]
     ],
     "service_time_min": 120,
@@ -1422,8 +1422,8 @@
         "2025-10-29T20:00:00+08:00"
       ]
     ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 40,
+    "service_time_min": 0,
+    "cost_estimate_per_person": 0,
     "tags": [],
     "note": "Thrifting, $40, 0.5h"
   }
