@@ -1,4 +1,3 @@
-import json
 from math import inf
 from collections import Counter
 
@@ -11,64 +10,83 @@ def plan_route(
     prefs=None,
     base_reward=10.0,
     diversity_penalty=0.6,
-    cost_beta=0.8,
-    fatigue_decay=0.03,   # kept for backward compat; fatigue now tied to remaining time
-    variety_penalty=0.4
+    cost_beta=0.4,
+    fatigue_decay=0.03,   # deprecated (kept for backward compat); fatigue now tied to remaining time
+    variety_penalty=0.2,
+    apply_smoothing=True,
+    embeddings=None,
+    sim_threshold=0.8,
+    semantic_penalty=0.3,
 ):
     """
     Greedy planner with hard time/budget caps.
     Returns dict with route indices, names, total time, total cost.
     """
 
-    # --- normalize prefs ---
-    # prefs may be None, a mapping {category: weight}, or a list of per-person mappings
-    if prefs is None:
-        prefs_map = {
-            "food": 1.0,
-            "cafe": 1.8,
-            "bar": 1.4,
-            "museum": 0.9,
-            "activity": 1.6,
-            "thrift": 1.2,
-            "park": 0.8,
-        }
-    else:
-        # if list, aggregate per-person maps by averaging weights
-        if isinstance(prefs, list):
-            # collect all categories present
-            cats = set()
-            for person in prefs:
-                if isinstance(person, dict):
-                    cats.update(k for k in person.keys())
-            prefs_map = {}
-            n = max(len(prefs), 1)
-            for c in cats:
-                s = 0.0
-                cnt = 0
-                for person in prefs:
-                    if isinstance(person, dict) and c in person:
-                        try:
-                            s += float(person[c])
-                        except Exception:
-                            s += 0.0
-                        cnt += 1
-                # average across members who provided a weight; if none provided, default to 1.0
-                prefs_map[c] = (s / cnt) if cnt > 0 else 1.0
-        elif isinstance(prefs, dict):
-            prefs_map = {str(k): float(v) for k, v in prefs.items()}
-        else:
-            # unknown format -> fallback to default
-            prefs_map = {
-                "food": 1.0,
-                "cafe": 1.8,
-                "bar": 1.4,
-                "museum": 0.9,
-                "activity": 1.6,
-                "thrift": 1.2,
-                "park": 0.8,
-            }
+    # --- defaults ---
+    default_prefs = {
+        "food": 1.0,
+        "cafe": 1.8,
+        "bar": 1.4,
+        "museum": 0.9,
+        "activity": 1.6,
+        "thrift": 1.2,
+        "park": 0.8,
+    }
 
     # -------- helpers --------
+    def _normalize_prefs(p):
+        # Case 1: nothing passed in → defaults
+        if p is None:
+            return default_prefs.copy()
+
+        # Case 2: single dict {cat: weight}
+        if isinstance(p, dict):
+            merged = default_prefs.copy()
+            for k, v in p.items():
+                try:
+                    merged[str(k).strip().lower()] = float(v)
+                except (TypeError, ValueError):
+                    pass
+            return merged
+
+        # Case 3: list of per-person dicts
+        if isinstance(p, list):
+            # collect all category keys across people (normalized)
+            accum = {}
+            for item in p:
+                if not isinstance(item, dict):
+                    continue
+                for k, v in item.items():
+                    key = str(k).strip().lower()
+                    try:
+                        val = float(v)
+                    except (TypeError, ValueError):
+                        continue
+                    accum.setdefault(key, []).append(val)
+
+            merged = default_prefs.copy()
+            # average values for any category keys provided
+            for key, vals in accum.items():
+                if vals:
+                    merged[key] = sum(vals) / len(vals)
+            return merged
+
+        # Anything weird → just fall back
+        return default_prefs.copy()
+
+    prefs_dict = _normalize_prefs(prefs)
+    # ensure prefs_dict contains entries for all venue categories (use lowercase keys)
+    for v in venues:
+        cat_full = str(v.get("category", "unknown")).strip().lower()
+        if cat_full not in prefs_dict:
+            prefs_dict[cat_full] = 1.0
+    # clamp variety penalty to a safe range
+    try:
+        variety_penalty = float(variety_penalty)
+    except Exception:
+        variety_penalty = 0.2
+    variety_penalty = max(0.0, min(variety_penalty, 0.9))
     def venue_cost(i):
         return int(venues[i].get("cost_estimate_per_person", 0) or 0)
 
@@ -79,13 +97,15 @@ def plan_route(
         return current_cost + venue_cost(next_idx) <= budget
 
     def venue_reward(venue, route_indices):
-        cat = venue.get("category", "unknown")
-        # prefer lowercase matching
-        w = prefs_map.get(str(cat).lower(), prefs_map.get(cat, 1.0))
+        cat = str(venue.get("category", "unknown")).strip().lower()
+        # use normalized prefs (category weights) when computing reward
+        w = prefs_dict.get(cat, 1.0)
         cats_so_far = [venues[i].get("category", "unknown") for i in route_indices]
-        count_same = Counter(cats_so_far)[cat]
+        # compare categories case-insensitively when counting repeats
+        cats_so_far_lc = [str(x).strip().lower() for x in cats_so_far]
+        count_same = Counter(cats_so_far_lc)[cat]
         diversity_factor = 1.0 / (1.0 + diversity_penalty * count_same)
-        return base_reward * w * diversity_factor
+        return base_reward * (w ** 2) * diversity_factor
 
     def cost_penalty(i):
         c = venue_cost(i)
@@ -129,6 +149,38 @@ def plan_route(
     time_spent = int(venues[best_seed].get("service_time_min", 60) or 60)
     current = best_seed
 
+    # Precompute similarity matrix if embeddings provided. This is done once to
+    # avoid repeated O(D) loops during candidate scoring. We attempt a safe
+    # normalization; if anything goes wrong we fall back to skipping semantic
+    # penalty.
+    sim_matrix = None
+    if embeddings is not None:
+        try:
+            n_emb = len(embeddings)
+            norms = [0.0] * n_emb
+            for i, v in enumerate(embeddings):
+                s = 0.0
+                for x in v:
+                    s += x * x
+                norms[i] = (s ** 0.5) if s > 0.0 else 0.0
+
+            sim_matrix = [[0.0] * n_emb for _ in range(n_emb)]
+            for i in range(n_emb):
+                for j in range(n_emb):
+                    ni = norms[i]
+                    nj = norms[j]
+                    if ni > 0 and nj > 0:
+                        s = 0.0
+                        vi = embeddings[i]
+                        vj = embeddings[j]
+                        for a, b in zip(vi, vj):
+                            s += a * b
+                        sim_matrix[i][j] = s / (ni * nj)
+                    else:
+                        sim_matrix[i][j] = 0.0
+        except Exception:
+            sim_matrix = None
+
     # -------- greedy expansion with hard caps --------
     n = len(venues)
     while True:
@@ -156,13 +208,31 @@ def plan_route(
 
             # scoring
             reward = venue_reward(venues[j], route)
-            price_factor = cost_penalty(j)
-
+            # boost bars toward the end of the itinerary so they naturally sit later
+            # remaining is minutes left (time_limit - time_spent)
             remaining = max(time_limit - time_spent, 0)
+            if str(venues[j].get("category", "")).strip().lower() == "bar" and remaining < 360:
+                reward *= 2.0
+            # semantic diversity penalty using precomputed embeddings (if provided)
+            if sim_matrix is not None and 0 <= j < len(sim_matrix):
+                try:
+                    # find max similarity between candidate j and any visited stop
+                    max_sim = 0.0
+                    for vi in route:
+                        if 0 <= vi < len(sim_matrix[j]):
+                            s = sim_matrix[j][vi]
+                            if s > max_sim:
+                                max_sim = s
+                    if max_sim > sim_threshold:
+                        reward *= semantic_penalty
+                except Exception:
+                    pass
+            price_factor = cost_penalty(j)
             fatigue_factor = max(0.3, min(1.0, remaining / max(time_limit, 1)))
 
-            last_cat = venues[route[-1]].get("category", "")
-            same_cat_penalty = variety_penalty if last_cat == venues[j].get("category", "") else 0.0
+            last_cat = str(venues[route[-1]].get("category", "")).strip().lower()
+            this_cat = str(venues[j].get("category", "")).strip().lower()
+            same_cat_penalty = variety_penalty if last_cat == this_cat else 0.0
             variety_factor = 1.0 - same_cat_penalty
 
             score = (reward * price_factor * fatigue_factor * variety_factor) / (travel + 1.0)
@@ -184,15 +254,172 @@ def plan_route(
         route.append(best_next)
         time_spent += int(round(travel_time + stay_time))
         current = best_next
+        # budget feasibility is already enforced before choosing best_next.
+        # Continue expanding until no feasible candidates remain.
 
-        if route_cost(route) > budget:
-            route.pop()
-            break
+    # compute totals / telemetry helpers
+    def _compute_total_time(order):
+        total = 0.0
+        for i, idx in enumerate(order):
+            stay = int(venues[idx].get("service_time_min", 60) or 60)
+            if i > 0:
+                prev = order[i - 1]
+                travel = float(tm[prev][idx] if 0 <= prev < len(tm) and 0 <= idx < len(tm) else 0.0)
+                total += travel
+            total += stay
+        return int(round(total))
 
-    total_cost = route_cost(route)
+    def _total_travel(order):
+        dist = 0.0
+        for i in range(1, len(order)):
+            a = order[i - 1]
+            b = order[i]
+            dist += float(tm[a][b] if 0 <= a < len(tm) and 0 <= b < len(tm) else 0.0)
+        return dist
+
+    # optionally smooth the route (hill-climb reorder); keep smoothing optional
+    final_route = list(route)
+    if apply_smoothing and len(final_route) >= 3:
+        try:
+            # smooth_route is defined below in this file
+            final_route = smooth_route(final_route, venues, tm, time_limit=time_limit)
+        except Exception:
+            # if smoothing fails for any reason, fall back to original order
+            final_route = list(route)
+
+    total_time = _compute_total_time(final_route)
+    total_cost = route_cost(final_route)
+    total_travel = _total_travel(final_route)
+    per_leg = total_travel / max(1, len(final_route) - 1)
+
     return {
-        "route_indices": route,
-        "route_names": [venues[i]["name"] for i in route],
-        "total_time": int(time_spent),
+        "route_indices": final_route,
+        "route_names": [venues[i]["name"] for i in final_route],
+        "total_time": int(total_time),
         "total_cost": int(total_cost),
+        # telemetry
+        "solver_total_travel": float(total_travel),
+        "solver_per_leg_travel": float(per_leg),
     }
+
+
+def smooth_route(route_indices, venues, tm, *, time_limit=None, max_iters=50, lambda_dist=0.02):
+    """
+    Simple hill-climb re-ordering to improve route coherence.
+
+    - Keeps the first stop fixed (seed) and reorders the rest by trying pairwise swaps
+      that improve a route-level coherence score.
+    - Uses a phase preference (where categories should appear along the route)
+      and transition bonuses (which category-to-category transitions are nicer).
+
+    Returns a new list of indices (same elements, reordered).
+    """
+    if not route_indices or len(route_indices) < 3:
+        return list(route_indices)
+
+    def compute_total_time(order):
+        # compute total time = sum(stays) + sum(travel between consecutive stops)
+        total = 0.0
+        for i, idx in enumerate(order):
+            stay = int(venues[idx].get("service_time_min", 60) or 60)
+            if i > 0:
+                prev = order[i - 1]
+                travel = float(tm[prev][idx] if 0 <= prev < len(tm) and 0 <= idx < len(tm) else 0.0)
+                total += travel
+            total += stay
+        return int(round(total))
+
+    def total_travel(order):
+        dist = 0.0
+        for i in range(1, len(order)):
+            a = order[i - 1]
+            b = order[i]
+            dist += float(tm[a][b] if 0 <= a < len(tm) and 0 <= b < len(tm) else 0.0)
+        return dist
+
+    def route_coherence_score(route):
+        score = 0.0
+        n = len(route)
+        # desired phase (0=early ... 1=late)
+        desired_phase = {
+            "museum": 0.2,
+            "park": 0.2,
+            "cafe": 0.35,
+            "thrift": 0.4,
+            "food": 0.5,
+            "activity": 0.6,
+            "bar": 0.95,
+        }
+        phase_weight = {
+            "museum": 1.0,
+            "park": 0.6,
+            "cafe": 0.9,
+            "thrift": 0.8,
+            "food": 1.0,
+            "activity": 0.8,
+            "bar": 1.2,
+        }
+
+        # transition bonuses for nice sequences
+        transition_bonus = {
+            ("thrift", "food"): 1.2,
+            ("food", "bar"): 1.4,
+            ("thrift", "bar"): 0.6,
+            ("cafe", "bar"): 0.8,
+            ("museum", "cafe"): 0.4,
+        }
+
+        for i, idx in enumerate(route):
+            cat = venues[idx].get("category", "unknown")
+            cat = str(cat).strip().lower()
+            phase = i / max(n - 1, 1)
+            desired = desired_phase.get(cat, 0.5)
+            pw = phase_weight.get(cat, 0.8)
+            score += (1.0 - abs(phase - desired)) * pw
+
+            if i > 0:
+                prev_cat = venues[route[i - 1]].get("category", "unknown")
+                prev_cat = str(prev_cat).strip().lower()
+                score += transition_bonus.get((prev_cat, cat), 0.0)
+                # small penalty for repeating same category
+                if prev_cat == cat:
+                    score -= 0.6
+
+        # subtract travel penalty so more compact orders are preferred
+        dist = total_travel(route)
+        score -= lambda_dist * dist
+
+        return score
+
+    # hill-climb by pairwise swaps (keep first index fixed)
+    best_route = list(route_indices)
+    best_score = route_coherence_score(best_route)
+    n = len(best_route)
+    iters = 0
+    improved = True
+    while improved and iters < max_iters:
+        improved = False
+        iters += 1
+        # try all pairwise swaps for positions 1..n-1
+        local_best_score = best_score
+        local_best_route = None
+        for i in range(1, n - 1):
+            for j in range(i + 1, n):
+                cand = best_route[:]
+                cand[i], cand[j] = cand[j], cand[i]
+                # reject candidate if it violates time_limit (when provided)
+                if time_limit is not None:
+                    cand_time = compute_total_time(cand)
+                    if cand_time > time_limit:
+                        continue
+                s = route_coherence_score(cand)
+                if s > local_best_score + 1e-6:
+                    local_best_score = s
+                    local_best_route = cand
+
+        if local_best_route is not None:
+            best_route = local_best_route
+            best_score = local_best_score
+            improved = True
+
+    return best_route

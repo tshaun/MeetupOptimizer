@@ -33,21 +33,23 @@ export default function RoutePlanner() {
     start: useDebouncedValue(start),
     end: useDebouncedValue(end),
   };
+  // dynamic category options fetched from backend
+  const [catOptions, setCatOptions] = useState([]);
+  const defaultPrefs = useMemo(() => Object.fromEntries(catOptions.map(c => [c, 1.0])), [catOptions]);
 
-  const catList = ["cafe", "restaurant", "museum", "park", "thrift", "bar", "gallery"];
-  const defaultPrefs = Object.fromEntries(catList.map(c => [c, 1.0]));
   const [prefsList, setPrefsList] = useState(() =>
-    Array.from({ length: Math.max(1, groupSize) }, () => ({ ...defaultPrefs }))
+    Array.from({ length: Math.max(1, groupSize) }, () => ({ }))
   );
 
   useEffect(() => {
     setPrefsList(prev => {
       const n = Math.max(1, groupSize);
-      if (prev.length === n) return prev;
-      if (prev.length < n) {
-        return [...prev, ...Array.from({ length: n - prev.length }, () => ({ ...defaultPrefs }))];
+      const next = prev.slice(0, n);
+      if (next.length < n) {
+        next.push(...Array.from({ length: n - next.length }, () => ({ ...defaultPrefs })));
       }
-      return prev.slice(0, n);
+      // ensure each person has entries for all known categories
+      return next.map(p => ({ ...defaultPrefs, ...p }));
     });
   }, [groupSize]);
 
@@ -101,6 +103,22 @@ export default function RoutePlanner() {
     })();
     return () => { cancel = true; };
   }, [qs]);
+
+  // fetch category options from backend (refresh when `refresh` changes after ingestion)
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const r = await fetch("http://localhost:8000/plan/categories");
+        if (!r.ok) throw new Error(await r.text());
+        const cats = await r.json();
+        if (!cancel) setCatOptions(Array.isArray(cats) ? cats : []);
+      } catch (e) {
+        // ignore silently; keep existing catOptions
+      }
+    })();
+    return () => { cancel = true; };
+  }, [refresh]);
 
   // ------- INGESTION -------
   const [uploadBusy, setUploadBusy] = useState(false);
@@ -253,7 +271,7 @@ export default function RoutePlanner() {
           <section className="panel">
             <h2 className="h2">Categories</h2>
             <div className="chips" style={{marginBottom:12}}>
-              {catList.map(c=>{
+              {catOptions.map(c=>{
                 const on = categories.includes(c);
                 return (
                   <button key={c}
@@ -277,7 +295,7 @@ export default function RoutePlanner() {
 
               <div style={{border:`1px solid var(--border)`, borderRadius:12, padding:12, background:"#0a1326"}}>
                 <div style={{maxHeight:220, overflow:"auto", display:"grid", gap:8}}>
-                  {catList.map(c=>(
+                  {catOptions.map(c=>(
                     <div key={c} className="row">
                       <div style={{width:90}} className="muted">{c}</div>
                       <input className="range" type="range" min="0" max="3" step="0.1"

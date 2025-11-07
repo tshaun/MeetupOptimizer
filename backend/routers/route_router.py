@@ -18,12 +18,18 @@ _DATA_CACHE: Dict[str, Any] = {
     "tm": None,
     "venues_mtime": 0.0,
     "tm_mtime": 0.0,
+    # semantic embeddings and model cache
+    "embeddings": None,    # list[list[float]] aligned with full venues
+    "emb_mtime": 0.0,      # mirrors venues_mtime used for embeddings
+    "st_model": None,      # SentenceTransformer instance
 }
 
 def clear_cache() -> None:
     """Clear cached data so subsequent requests reload updated files."""
     _DATA_CACHE["venues"] = None
     _DATA_CACHE["tm"] = None
+    _DATA_CACHE["embeddings"] = None
+    _DATA_CACHE["st_model"] = None
 
 def _data_root() -> Path:
     # when this module is in backend/routers, parents[2] points to project root
@@ -46,6 +52,68 @@ def _load_base_data() -> Tuple[List[dict], List[List[float]]]:
     if len(tm) != len(venues):
         raise RuntimeError("travel_matrix.json size does not match venues.json")
     return venues, tm
+
+# -----------------------------
+# Embeddings (SentenceTransformer)
+# -----------------------------
+def _get_st_model():
+    # lazy import and instantiate model, cache it
+    if _DATA_CACHE.get("st_model") is not None:
+        return _DATA_CACHE["st_model"]
+    try:
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        _DATA_CACHE["st_model"] = model
+        return model
+    except Exception:
+        _DATA_CACHE["st_model"] = None
+        return None
+
+def _venue_texts(venues: List[dict]) -> List[str]:
+    texts: List[str] = []
+    for v in venues:
+        name = str(v.get("name", "")).strip()
+        cat = str(v.get("category", "")).strip()
+        # Build compact text combining key fields
+        if cat and name:
+            texts.append(f"{name} | {cat}")
+        elif name:
+            texts.append(name)
+        else:
+            texts.append(cat or "")
+    return texts
+
+def _compute_embeddings_for_full_venues(full_venues: List[dict]) -> Optional[List[List[float]]]:
+    model = _get_st_model()
+    if model is None:
+        return None
+    try:
+        texts = _venue_texts(full_venues)
+        # encode returns numpy array if convert_to_numpy=True; we convert to Python lists for JSON-ability
+        embs = model.encode(texts, batch_size=64, show_progress_bar=False, normalize_embeddings=True)
+        # convert to nested lists
+        return [list(map(float, row)) for row in embs]
+    except Exception:
+        return None
+
+def _ensure_embeddings_up_to_date(full_venues: List[dict]) -> Optional[List[List[float]]]:
+    # If we already have embeddings and the venues timestamp hasn't changed, reuse
+    if (
+        _DATA_CACHE.get("embeddings") is not None
+        and _DATA_CACHE.get("emb_mtime") == _DATA_CACHE.get("venues_mtime")
+        and isinstance(_DATA_CACHE.get("embeddings"), list)
+        and len(_DATA_CACHE["embeddings"]) == len(full_venues)
+    ):
+        return _DATA_CACHE["embeddings"]
+    # Otherwise recompute
+    embs = _compute_embeddings_for_full_venues(full_venues)
+    if embs is not None and len(embs) == len(full_venues):
+        _DATA_CACHE["embeddings"] = embs
+        _DATA_CACHE["emb_mtime"] = _DATA_CACHE.get("venues_mtime", 0.0)
+        return embs
+    # fallback: no embeddings
+    _DATA_CACHE["embeddings"] = None
+    return None
 
 # -----------------------------
 # Helpers
@@ -72,6 +140,13 @@ def _slice_by_categories(venues: List[dict], tm: List[List[float]], cats: Option
     sliced = [[tm[i][j] for j in keep_idx] for i in keep_idx]
     sliced_venues = [venues[i] for i in keep_idx]
     return sliced_venues, sliced, keep_idx
+
+def _slice_embeddings(embeddings: Optional[List[List[float]]], keep_idx: Optional[List[int]]) -> Optional[List[List[float]]]:
+    if embeddings is None:
+        return None
+    if not keep_idx:
+        return embeddings
+    return [embeddings[i] for i in keep_idx]
 
 def _parse_latlon(s: Optional[str]) -> Optional[Tuple[float, float]]:
     if not s:
@@ -177,6 +252,9 @@ def get_plan(
     lock_order: bool = Query(False, description="If true and 'order' provided, respect that order instead of solving"),
     order: Optional[str] = Query(None, description="Comma-separated indices/ids/names when lock_order=true"),
     prefs: Optional[str] = Query(None, description="Optional JSON-encoded category weights, e.g. '{\"cafe\":1.5}'"),
+    enable_embeddings: bool = Query(True, description="Use semantic diversity model if available"),
+    sim_threshold: float = Query(0.8, ge=-1.0, le=1.0, description="Cosine similarity threshold for semantic penalty"),
+    semantic_penalty: float = Query(0.3, ge=0.0, le=1.0, description="Multiplier applied when similarity exceeds threshold"),
 ):
     try:
         full_venues, full_tm = _load_base_data()
@@ -185,6 +263,11 @@ def get_plan(
 
     cats = _parse_categories(categories)
     venues_flt, tm_flt, keep_map = _slice_by_categories(full_venues, full_tm, cats)
+
+    # Prepare embeddings aligned to full venues (then slice if filtered)
+    embeddings_full: Optional[List[List[float]]] = None
+    if enable_embeddings:
+        embeddings_full = _ensure_embeddings_up_to_date(full_venues)
 
     if cats and not keep_map:
         # no venues left after filtering
@@ -233,6 +316,7 @@ def get_plan(
         # Solve on the filtered problem if we filtered; else on the full set
         v_for_solver = venues_flt or full_venues
         tm_for_solver = tm_flt if venues_flt is not None and keep_map else full_tm
+        embeddings_for_solver = _slice_embeddings(embeddings_full, keep_map) if embeddings_full is not None else None
 
         # parse inline prefs JSON if provided
         prefs_map = None
@@ -263,6 +347,9 @@ def get_plan(
             budget=effective_budget,
             time_limit=time_limit,
             prefs=prefs_map,
+            embeddings=embeddings_for_solver,
+            sim_threshold=sim_threshold,
+            semantic_penalty=semantic_penalty,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Planner failed: {e}")
@@ -301,4 +388,19 @@ def get_plan(
     for k, v in result.items():
         if k not in out:
             out[k] = v
+    return out
+
+
+@router.get("/categories")
+def list_categories():
+    """Return sorted list of unique categories (lowercased) from venues.json."""
+    try:
+        venues, _ = _load_base_data()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load base data: {e}")
+    cats = {
+        str(v.get("category", "unknown")).strip().lower()
+        for v in venues if v.get("category") is not None
+    }
+    out = sorted(c for c in cats if c)
     return out
