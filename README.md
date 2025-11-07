@@ -33,9 +33,6 @@ cd .\backend
 # ensure the package import resolves by invoking uvicorn with the package module
 ..\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload
 ```
-
-The backend exposes routes under `/plan` and `/venues` (see `backend/routers`). During the refactor the router implementation is in `backend/routers` and small compatibility shims remain in `src/` so existing imports continue to work.
-
 4. Start the frontend (React):
 
 ```powershell
@@ -48,5 +45,3 @@ Notes and troubleshooting
 - If the backend fails to import `fastapi` or `pydantic`, ensure the virtualenv is activated and `pip install -r requirements.txt` completed successfully.
 - Data files (JSON/CSV) are currently in `src/` and the backend routers read from `src/`. If you want the data moved to `data/`, I can do that in a follow-up change and update the router data root.
 - The frontend `npm install` produced some audit warnings (some transitive deps are deprecated); these are common in React projects. Run `npm audit` and `npm audit fix` if you want to address vulnerabilities.
-
-If you want, I can now move the data to `data/` and update backend paths, or run a live test of the backend and frontend start commands and report results.
