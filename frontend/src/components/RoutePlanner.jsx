@@ -18,10 +18,30 @@ export default function RoutePlanner() {
   const [budget, setBudget] = useState(80);
   const [timeLimit, setTimeLimit] = useState(240);
   const [groupSize, setGroupSize] = useState(3);
-  const [categories, setCategories] = useState(["cafe", "museum", "park"]);
+  // align frontend category keys with backend data keys (avoid 'restaurant'/'gallery' mismatch)
+  // start with no category filter (empty = include all categories)
+  const [categories, setCategories] = useState([]);
+  const [prefs, setPrefs] = useState(() => {
+    // default per-category weights to match planner default_prefs keys
+    const initial = {};
+    ["food", "cafe", "bar", "museum", "activity", "thrift", "park"].forEach(c => {
+      initial[c] = 1.0;
+    });
+    return initial;
+  });
   const [fairness, setFairness] = useState(0.5); // 0 maximize sum, 1 maximize balance
   const [start, setStart] = useState("");        // optional "lat,lon"
   const [end, setEnd] = useState("");            // optional "lat,lon"
+  const [perPersonPrefsMode, setPerPersonPrefsMode] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(0);
+  const [prefsPerUser, setPrefsPerUser] = useState(() => {
+    // initialize with one entry matching default prefs
+    const base = {};
+    ["cafe", "restaurant", "museum", "park", "thrift", "bar", "gallery"].forEach(c => {
+      base[c] = 1.0;
+    });
+    return [JSON.parse(JSON.stringify(base))];
+  });
 
   const debounced = {
     budget: useDebouncedValue(budget),
@@ -29,6 +49,9 @@ export default function RoutePlanner() {
     groupSize: useDebouncedValue(groupSize),
     categories: useDebouncedValue(categories),
     fairness: useDebouncedValue(fairness),
+    prefs: useDebouncedValue(prefs),
+    perPersonPrefsMode: useDebouncedValue(perPersonPrefsMode),
+    prefsPerUser: useDebouncedValue(prefsPerUser),
     start: useDebouncedValue(start),
     end: useDebouncedValue(end),
   };
@@ -44,6 +67,15 @@ export default function RoutePlanner() {
     p.set("time_limit", String(debounced.timeLimit));
     p.set("group_size", String(debounced.groupSize));
     p.set("fairness", String(debounced.fairness));
+    try {
+      if (debounced.perPersonPrefsMode && Array.isArray(debounced.prefsPerUser)) {
+        p.set("prefs", JSON.stringify(debounced.prefsPerUser));
+      } else if (debounced.prefs) {
+        p.set("prefs", JSON.stringify(debounced.prefs));
+      }
+    } catch (e) {
+      // ignore
+    }
     if (debounced.categories?.length) p.set("categories", debounced.categories.join(","));
     if (debounced.start) p.set("start", debounced.start);
     if (debounced.end) p.set("end", debounced.end);
@@ -118,7 +150,23 @@ export default function RoutePlanner() {
   }
 
   // UI helpers
-  const catList = ["cafe", "restaurant", "museum", "park", "thrift", "bar", "gallery"];
+  // keep this list in sync with planner categories (food, cafe, bar, museum, activity, thrift, park)
+  const catList = ["food", "cafe", "bar", "museum", "activity", "thrift", "park"];
+
+  // Sync prefsPerUser length with groupSize
+  useEffect(() => {
+    const gs = Math.max(1, groupSize);
+    setPrefsPerUser(prev => {
+      const next = prev.slice(0, gs);
+      // if need more, append copies of first or global prefs
+      while (next.length < gs) {
+        next.push(JSON.parse(JSON.stringify(prefs)));
+      }
+      return next;
+    });
+    // clamp selectedUser
+    setSelectedUser(s => Math.min(s, Math.max(0, gs - 1)));
+  }, [groupSize]);
 
   return (
     <div className="p-4 space-y-4">
@@ -190,6 +238,66 @@ export default function RoutePlanner() {
                 </button>
               );
             })}
+          </div>
+        </div>
+        <div className="bg-white p-3 rounded-xl shadow space-y-2">
+          <h2 className="font-semibold">Preferences</h2>
+          <div className="text-xs text-gray-600 mb-2">Adjust category preferences (higher = more preferred)</div>
+          <div className="flex items-center gap-3 mb-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={perPersonPrefsMode}
+                onChange={e => setPerPersonPrefsMode(Boolean(e.target.checked))} />
+              Per-person preferences
+            </label>
+            {perPersonPrefsMode && (
+              <div className="text-sm text-gray-600">Users: {groupSize}</div>
+            )}
+            {perPersonPrefsMode && (
+              <button className="ml-auto px-2 py-1 text-xs bg-gray-100 rounded" onClick={() => {
+                // copy current selected prefs to all users
+                const sample = (prefsPerUser[selectedUser] || prefs);
+                setPrefsPerUser(prev => prev.map(() => JSON.parse(JSON.stringify(sample))));
+              }}>Copy to all</button>
+            )}
+          </div>
+          <div className="space-y-2 max-h-40 overflow-auto">
+            {perPersonPrefsMode ? (
+              <>
+                <div className="flex gap-2 items-center mb-2">
+                  {Array.from({ length: Math.max(1, groupSize) }).map((_, i) => (
+                    <button key={i}
+                      onClick={() => setSelectedUser(i)}
+                      className={`px-2 py-1 text-sm rounded ${selectedUser === i ? 'bg-blue-600 text-white' : 'bg-white border'}`}>
+                      User {i + 1}
+                    </button>
+                  ))}
+                </div>
+                {Object.keys(prefsPerUser[selectedUser] || prefs).map(cat => (
+                  <div key={cat} className="flex items-center gap-2">
+                    <div className="w-24 text-sm">{cat}</div>
+                    <input type="range" min="0.2" max="3" step="0.1" value={(prefsPerUser[selectedUser] || prefs)[cat]}
+                      onChange={e => setPrefsPerUser(prev => {
+                        const copy = prev.map(p => ({ ...p }));
+                        copy[selectedUser] = copy[selectedUser] || JSON.parse(JSON.stringify(prefs));
+                        copy[selectedUser][cat] = Number(e.target.value);
+                        return copy;
+                      })}
+                      className="flex-1" />
+                    <div className="w-12 text-right text-sm">{((prefsPerUser[selectedUser] || prefs)[cat]).toFixed(1)}</div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              Object.keys(prefs).map(cat => (
+                <div key={cat} className="flex items-center gap-2">
+                  <div className="w-24 text-sm">{cat}</div>
+                  <input type="range" min="0.2" max="3" step="0.1" value={prefs[cat]}
+                    onChange={e => setPrefs(prev => ({ ...prev, [cat]: Number(e.target.value) }))}
+                    className="flex-1" />
+                  <div className="w-12 text-right text-sm">{prefs[cat].toFixed(1)}</div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
