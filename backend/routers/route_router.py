@@ -255,6 +255,7 @@ def get_plan(
     enable_embeddings: bool = Query(True, description="Use semantic diversity model if available"),
     sim_threshold: float = Query(0.8, ge=-1.0, le=1.0, description="Cosine similarity threshold for semantic penalty"),
     semantic_penalty: float = Query(0.3, ge=0.0, le=1.0, description="Multiplier applied when similarity exceeds threshold"),
+    fairness_profile: Optional[str] = Query(None, description="Optional preset: 'balanced' or 'strict' (overrides slider)")
 ):
     try:
         full_venues, full_tm = _load_base_data()
@@ -341,6 +342,29 @@ def get_plan(
             except Exception:
                 prefs_map = None
 
+        # Map simple frontend fairness slider (0..1) to planner fairness knobs.
+        # If an explicit fairness_profile is provided, prefer it.
+        plan_kwargs = {}
+        if fairness_profile:
+            plan_kwargs['fairness_profile'] = fairness_profile
+        else:
+            # slider -> preset/alpha mapping
+            try:
+                fval = float(fairness)
+            except Exception:
+                fval = 0.0
+            if fval >= 0.8:
+                # request strict preset
+                plan_kwargs['fairness_profile'] = 'strict'
+            elif fval <= 0.2:
+                # balanced / default behavior
+                plan_kwargs['fairness_profile'] = None
+            else:
+                # intermediate: scale fairness_alpha between 1..10 and keep Nash marginal
+                plan_kwargs['fairness_alpha'] = 1.0 + fval * 9.0
+                plan_kwargs['fairness_mode'] = 'marginal'
+                plan_kwargs['fairness_group_aggregator'] = 'nash'
+
         result = plan_route(
             v_for_solver,
             tm_for_solver,
@@ -350,6 +374,7 @@ def get_plan(
             embeddings=embeddings_for_solver,
             sim_threshold=sim_threshold,
             semantic_penalty=semantic_penalty,
+            **plan_kwargs,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Planner failed: {e}")

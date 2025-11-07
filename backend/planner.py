@@ -1,4 +1,4 @@
-from math import inf
+from math import inf, log, exp
 from collections import Counter
 
 def plan_route(
@@ -7,16 +7,24 @@ def plan_route(
     *,
     time_limit=360,
     budget=80,
-    prefs=None,
+    prefs=None,               # backward compat: single or list aggregated into people_prefs
+    people_prefs=None,        # new: list[dict[str,float]] per-person preferences (lowercased keys)
     base_reward=10.0,
     diversity_penalty=0.6,
     cost_beta=0.4,
     fatigue_decay=0.03,   # deprecated (kept for backward compat); fatigue now tied to remaining time
     variety_penalty=0.2,
     apply_smoothing=True,
+    enable_category_boosts=True,
+    travel_divisor_k=1.0,
     embeddings=None,
     sim_threshold=0.8,
     semantic_penalty=0.3,
+    utility_aggregator="nash",  # 'nash' (geometric mean) or 'utilitarian' (sum)
+    fairness_mode="marginal",   # 'marginal' (delta) or 'absolute' (prospective)
+    fairness_alpha=1.0,          # scales fairness utility before other penalties
+    fairness_group_aggregator="nash",  # 'nash' or 'maxmin' for group welfare when not utilitarian
+    fairness_profile=None,              # None | 'balanced' | 'strict' overrides key fairness params
 ):
     """
     Greedy planner with hard time/budget caps.
@@ -34,53 +42,66 @@ def plan_route(
         "park": 0.8,
     }
 
-    # -------- helpers --------
-    def _normalize_prefs(p):
-        # Case 1: nothing passed in → defaults
-        if p is None:
-            return default_prefs.copy()
+    # -------- helpers (fairness) --------
+    def _normalize_people(p_in, legacy):
+        """Return list of per-person preference dicts (lowercased keys).
 
-        # Case 2: single dict {cat: weight}
-        if isinstance(p, dict):
-            merged = default_prefs.copy()
-            for k, v in p.items():
+        Precedence:
+        - If people_prefs explicitly provided and is list of dicts, use it.
+        - Else if legacy prefs is list, treat as people_prefs.
+        - Else if legacy prefs is dict, wrap as single person.
+        - Else use one default person (default_prefs).
+        Fill missing categories with default weight (from default_prefs or 1.0 if absent).
+        """
+        if p_in is not None and isinstance(p_in, list) and all(isinstance(x, dict) for x in p_in):
+            raw = p_in
+        elif legacy is not None:
+            if isinstance(legacy, list) and all(isinstance(x, dict) for x in legacy):
+                raw = legacy
+            elif isinstance(legacy, dict):
+                raw = [legacy]
+            else:
+                raw = [default_prefs]
+        else:
+            raw = [default_prefs]
+
+        norm_list = []
+        for d in raw:
+            nd = {}
+            for k, v in d.items():
                 try:
-                    merged[str(k).strip().lower()] = float(v)
+                    nd[str(k).strip().lower()] = float(v)
                 except (TypeError, ValueError):
-                    pass
-            return merged
-
-        # Case 3: list of per-person dicts
-        if isinstance(p, list):
-            # collect all category keys across people (normalized)
-            accum = {}
-            for item in p:
-                if not isinstance(item, dict):
                     continue
-                for k, v in item.items():
-                    key = str(k).strip().lower()
-                    try:
-                        val = float(v)
-                    except (TypeError, ValueError):
-                        continue
-                    accum.setdefault(key, []).append(val)
+            # fill defaults for missing known categories
+            for k_def, v_def in default_prefs.items():
+                if k_def not in nd:
+                    nd[k_def] = v_def
+            norm_list.append(nd)
 
-            merged = default_prefs.copy()
-            # average values for any category keys provided
-            for key, vals in accum.items():
-                if vals:
-                    merged[key] = sum(vals) / len(vals)
-            return merged
+        # ensure venue categories also present
+        all_cats = set()
+        for v in venues:
+            all_cats.add(str(v.get("category", "unknown")).strip().lower())
+        for nd in norm_list:
+            for c in all_cats:
+                if c not in nd:
+                    nd[c] = 1.0
+        return norm_list
 
-        # Anything weird → just fall back
-        return default_prefs.copy()
+    # Fairness profile presets override selected parameters for reproducibility
+    if fairness_profile == 'strict':
+        enable_category_boosts = False
+        fairness_group_aggregator = 'maxmin'
+        fairness_mode = 'absolute'
+        fairness_alpha = 10.0
+        travel_divisor_k = 8.0
+        cost_beta = 0.1
+        diversity_penalty = 0.9
+        variety_penalty = 0.3
 
-    prefs_dict = _normalize_prefs(prefs)
-    # ensure prefs_dict contains entries for all venue categories (use lowercase keys)
-    for v in venues:
-        cat_full = str(v.get("category", "unknown")).strip().lower()
-        if cat_full not in prefs_dict:
-            prefs_dict[cat_full] = 1.0
+    people_list = _normalize_people(people_prefs, prefs)
+    num_people = len(people_list)
     # clamp variety penalty to a safe range
     try:
         variety_penalty = float(variety_penalty)
@@ -96,16 +117,61 @@ def plan_route(
     def feasible_cost(current_cost, next_idx):
         return current_cost + venue_cost(next_idx) <= budget
 
-    def venue_reward(venue, route_indices):
-        cat = str(venue.get("category", "unknown")).strip().lower()
-        # use normalized prefs (category weights) when computing reward
-        w = prefs_dict.get(cat, 1.0)
-        cats_so_far = [venues[i].get("category", "unknown") for i in route_indices]
-        # compare categories case-insensitively when counting repeats
-        cats_so_far_lc = [str(x).strip().lower() for x in cats_so_far]
-        count_same = Counter(cats_so_far_lc)[cat]
+    # Per-person cumulative utilities during construction (marginal fairness scoring)
+    person_cum_utils = [0.0] * num_people
+
+    def _per_person_venue_utils(cat: str):
+        vals = []
+        for pref_d in people_list:
+            w_i = pref_d.get(cat, 1.0)
+            vals.append(base_reward * (w_i ** 2))
+        return vals
+
+    def _aggregate(vals, mode):
+        if mode == "utilitarian":
+            return sum(vals)
+        # Nash geometric mean
+        sum_logs = 0.0
+        for v in vals:
+            sum_logs += log(max(v, 1e-6))
+        return exp(sum_logs / max(len(vals), 1))
+
+    def _group_aggregate_from_sums(person_sums, agg_name):
+        """Aggregate per-person cumulative utilities to a single group score.
+
+        agg_name: 'nash' | 'maxmin' | 'utilitarian'
+        """
+        if agg_name == "utilitarian":
+            return sum(person_sums)
+        if agg_name == "maxmin":
+            return min(person_sums) if person_sums else 0.0
+        # default 'nash'
+        sum_logs = 0.0
+        for u in person_sums:
+            sum_logs += log(max(u, 1e-6))
+        return exp(sum_logs / max(len(person_sums), 1))
+
+    def fairness_score_for_cat(venue_cat: str, route_indices):
+        """Return fairness utility for adding a venue of given category now.
+
+        - marginal: uses delta of aggregated welfare (new_agg - curr_agg, floored at 0)
+        - absolute: uses new_agg only (prospective aggregate), stronger push to balancing early
+        Then applies diversity penalty post aggregation and scales by fairness_alpha.
+        """
+        # Choose group aggregator: utilitarian is used only when explicitly requested
+        agg_name = "utilitarian" if utility_aggregator == "utilitarian" else fairness_group_aggregator
+        curr_agg = _group_aggregate_from_sums(person_cum_utils, agg_name)
+        add_vals = _per_person_venue_utils(venue_cat)
+        new_sums = [person_cum_utils[i] + add_vals[i] for i in range(num_people)]
+        new_agg = _group_aggregate_from_sums(new_sums, agg_name)
+        if fairness_mode == "absolute":
+            base = new_agg
+        else:
+            base = max(new_agg - curr_agg, 0.0)
+        cats_so_far_lc = [str(venues[i].get("category", "unknown")).strip().lower() for i in route_indices]
+        count_same = Counter(cats_so_far_lc)[venue_cat]
         diversity_factor = 1.0 / (1.0 + diversity_penalty * count_same)
-        return base_reward * (w ** 2) * diversity_factor
+        return fairness_alpha * base * diversity_factor
 
     def cost_penalty(i):
         c = venue_cost(i)
@@ -131,12 +197,13 @@ def plan_route(
         if stay > time_limit or venue_cost(j) > budget:
             continue
         # seed score: reward adjusted by price and "time pain"
-        reward = venue_reward(venues[j], [])
+        cat = str(venues[j].get("category", "unknown")).strip().lower()
+        reward = fairness_score_for_cat(cat, [])
         price_factor = cost_penalty(j)
         # prefer shorter stays when time is tight
         time_factor = 1.0 / (1.0 + stay / max(time_limit, 1))
         score = (reward * price_factor * time_factor) / (stay + 1)
-        if score > best_seed_score:
+        if score > best_seed_score or (score == best_seed_score and (best_seed is None or j < best_seed)):
             best_seed_score = score
             best_seed = j
 
@@ -207,12 +274,14 @@ def plan_route(
                 continue
 
             # scoring
-            reward = venue_reward(venues[j], route)
-            # boost bars toward the end of the itinerary so they naturally sit later
-            # remaining is minutes left (time_limit - time_spent)
+            cat = str(venues[j].get("category", "unknown")).strip().lower()
+            reward = fairness_score_for_cat(cat, route)
+            # optional category-specific boosts
             remaining = max(time_limit - time_spent, 0)
-            if str(venues[j].get("category", "")).strip().lower() == "bar" and remaining < 360:
-                reward *= 2.0
+            if enable_category_boosts:
+                # boost bars toward the end of the itinerary so they naturally sit later
+                if str(venues[j].get("category", "")).strip().lower() == "bar" and remaining < 360:
+                    reward *= 2.0
             # semantic diversity penalty using precomputed embeddings (if provided)
             if sim_matrix is not None and 0 <= j < len(sim_matrix):
                 try:
@@ -235,9 +304,12 @@ def plan_route(
             same_cat_penalty = variety_penalty if last_cat == this_cat else 0.0
             variety_factor = 1.0 - same_cat_penalty
 
-            score = (reward * price_factor * fatigue_factor * variety_factor) / (travel + 1.0)
+            denom = (travel + max(0.0, float(travel_divisor_k)))
+            if denom <= 0.0:
+                denom = 1.0
+            score = (reward * price_factor * fatigue_factor * variety_factor) / denom
 
-            if score > best_score:
+            if score > best_score or (score == best_score and (best_next is None or j < best_next)):
                 best_score = score
                 best_next = j
 
@@ -254,6 +326,11 @@ def plan_route(
         route.append(best_next)
         time_spent += int(round(travel_time + stay_time))
         current = best_next
+        # update cumulative utilities with chosen venue
+        chosen_cat = str(venues[best_next].get("category", "unknown")).strip().lower()
+        add_vals = _per_person_venue_utils(chosen_cat)
+        for i in range(num_people):
+            person_cum_utils[i] += add_vals[i]
         # budget feasibility is already enforced before choosing best_next.
         # Continue expanding until no feasible candidates remain.
 
@@ -292,6 +369,25 @@ def plan_route(
     total_travel = _total_travel(final_route)
     per_leg = total_travel / max(1, len(final_route) - 1)
 
+    # per-person cumulative utilities over final route (sum of u_i for chosen venues)
+    # person_cum_utils already tracked incrementally (may differ if smoothing changed order
+    # after construction; if smoothing applied, recompute utilities in new order)
+    if apply_smoothing and len(final_route) >= 3:
+        # recompute to reflect new order (order doesn't matter for sums, but keep consistent logic)
+        person_cum_utils = [0.0] * num_people
+        for idx in final_route:
+            cat = str(venues[idx].get("category", "unknown")).strip().lower()
+            add_vals = _per_person_venue_utils(cat)
+            for i in range(num_people):
+                person_cum_utils[i] += add_vals[i]
+
+    # Nash welfare over cumulative sums (always compute for telemetry)
+    sum_logs = 0.0
+    for u in person_cum_utils:
+        sum_logs += log(max(u, 1e-6))
+    nash_utility = exp(sum_logs / max(len(person_cum_utils), 1))
+    final_aggregated = _aggregate(person_cum_utils, utility_aggregator)
+
     return {
         "route_indices": final_route,
         "route_names": [venues[i]["name"] for i in final_route],
@@ -300,6 +396,9 @@ def plan_route(
         # telemetry
         "solver_total_travel": float(total_travel),
         "solver_per_leg_travel": float(per_leg),
+        "solver_person_utilities": person_cum_utils,
+        "solver_nash_utility": float(nash_utility),
+        "solver_aggregated_utility": float(final_aggregated),
     }
 
 

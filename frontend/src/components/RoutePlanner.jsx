@@ -20,6 +20,7 @@ export default function RoutePlanner() {
   const [groupSize, setGroupSize] = useState(3);
   const [categories, setCategories] = useState([]);
   const [fairness, setFairness] = useState(0.5);
+  const [strictFairness, setStrictFairness] = useState(false);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [refresh, setRefresh] = useState(0);
@@ -30,6 +31,7 @@ export default function RoutePlanner() {
     groupSize: useDebouncedValue(groupSize),
     categories: useDebouncedValue(categories),
     fairness: useDebouncedValue(fairness),
+  strictFairness: useDebouncedValue(strictFairness),
     start: useDebouncedValue(start),
     end: useDebouncedValue(end),
   };
@@ -67,7 +69,12 @@ export default function RoutePlanner() {
     p.set("budget", String(debounced.budget));
     p.set("time_limit", String(debounced.timeLimit));
     p.set("group_size", String(debounced.groupSize));
-    p.set("fairness", String(debounced.fairness));
+    // If strict fairness toggle is on, prefer explicit preset. Otherwise send slider value.
+    if (debounced.strictFairness) {
+      p.set("fairness_profile", "strict");
+    } else {
+      p.set("fairness", String(debounced.fairness));
+    }
     if (debounced.categories?.length) p.set("categories", debounced.categories.join(","));
     if (debounced.start) p.set("start", debounced.start);
     if (debounced.end) p.set("end", debounced.end);
@@ -168,7 +175,20 @@ export default function RoutePlanner() {
   .rp-root{position:fixed; inset:0; background:var(--bg); color:var(--text); font:14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
   .topbar{height:48px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid var(--border); background:rgba(11,18,32,.9); backdrop-filter:saturate(140%) blur(6px);}
   .main{height:calc(100vh - 48px); display:grid; grid-template-columns:360px 1fr;}
-  .side{border-right:1px solid var(--border); height:100%; overflow:auto; padding:16px; gap:16px; display:flex; flex-direction:column;}
+  .side{
+    border-right:1px solid var(--border);
+    height:100%;
+    /* allow horizontal overflow for tooltips, keep vertical scrolling */
+    overflow-y:auto;
+    overflow-x:visible;
+    padding:16px;
+    gap:16px;
+    display:flex;
+    flex-direction:column;
+    /* make sure sidebar content can sit above the map */
+    position:relative;
+    z-index:10;
+  }
   .panel{background:linear-gradient(180deg, var(--panel), var(--panel2)); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:0 6px 20px rgba(0,0,0,.25);}
   .h2{font-weight:600; margin:0 0 8px;}
   .labelrow{display:flex; justify-content:space-between; align-items:center; gap:8px; color:var(--muted);}
@@ -198,6 +218,26 @@ export default function RoutePlanner() {
   /* upload pill */
   .upload{display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:#0a1326; cursor:pointer; font-size:12px}
   .upload:hover{border-color:#3d4a6b}
+  .info{position:relative; display:inline-block; margin-left:8px; color:var(--muted); font-size:12px}
+  .info .tip{
+    visibility:hidden;
+    opacity:0;
+    width:260px;
+    background:linear-gradient(180deg, var(--panel), var(--panel2));
+    color:var(--text);
+    text-align:left;
+    border-radius:8px;
+    padding:8px;
+    position:absolute;
+    z-index:1000; /* stay above map etc. */
+    top:26px;
+    right:0;      /* anchor to the right edge of the ℹ️ icon */
+    left:auto;    /* don’t push into the map column */
+    box-shadow:0 8px 24px rgba(0,0,0,.45);
+    border:1px solid var(--border);
+    transition:opacity .12s ease;
+  }
+  .info:hover .tip{visibility:visible; opacity:1}
   `;
 
   // ------- RENDER -------
@@ -251,11 +291,35 @@ export default function RoutePlanner() {
                 <input className="input" type="number" value={groupSize} min={1} onChange={e=>setGroupSize(Number(e.target.value))}/>
               </div>
               <div>
-                <div className="labelrow"><span>Fairness vs total fun</span><span className="muted">{fairness.toFixed(2)}</span></div>
-                <input className="range" type="range" min="0" max="1" step="0.05" value={fairness} onChange={e=>setFairness(Number(e.target.value))}/>
-                <div className="labelrow" style={{fontSize:12}}>
-                  <span>Max total utility</span><span>Balance across friends</span>
+                <div className="labelrow">
+                  <div style={{display:"flex", alignItems:"center", gap:6}}>
+                    <span>Balance: Group fun ↔ Fairness</span>
+                    <span className="info" aria-hidden>
+                      ℹ️
+                      <span className="tip">
+                        Use the slider to choose a balance between two goals:
+                        <ul style={{margin:'6px 0 0 14px', padding:0}}>
+                          <li><b>Group fun</b> — picks spots that give the most total enjoyment for everyone.</li>
+                          <li><b>Fairness</b> — picks spots so people get a more even experience.</li>
+                        </ul>
+                        <br/>
+                        Turn on <b>Strict fairness</b> if you want to protect the person who would otherwise be least happy.
+                        This reduces the total group score but avoids leaving someone very unhappy.
+                      </span>
+                    </span>
+                  </div>
+                  <span className="muted">{fairness.toFixed(2)}</span>
                 </div>
+                  <div style={{display:"flex", gap:12, alignItems:"center"}}>
+                    <input className="range" type="range" min="0" max="1" step="0.05" value={fairness} onChange={e=>setFairness(Number(e.target.value))} disabled={strictFairness} />
+                    <label style={{display:"flex", alignItems:"center", gap:8, fontSize:12}}>
+                      <input type="checkbox" checked={strictFairness} onChange={e=>setStrictFairness(Boolean(e.target.checked))} />
+                      <span className="muted">Strict fairness</span>
+                    </label>
+                  </div>
+        <div className="labelrow" style={{fontSize:12}}>
+          <span>Group fun</span><span>{strictFairness ? "Strict balance (opt-in)" : "More even experience"}</span>
+        </div>
               </div>
               <div>
                 <div className="labelrow" style={{justifyContent:"flex-start"}}><span>Start (lat, lon)</span></div>
