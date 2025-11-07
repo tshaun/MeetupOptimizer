@@ -2,8 +2,6 @@
 
 ## Run & development (Windows / PowerShell)
 
-This repository was reorganized so that backend code lives in `backend/`, frontend in `frontend/`, and data remains under `src/` for now.
-
 Minimal steps to get the project running locally (PowerShell):
 
 1. Create and activate a Python virtual environment (from repo root):
@@ -37,7 +35,7 @@ cd .\backend
 
 ```powershell
 cd ..\frontend
-npm install    # already done if you followed earlier steps
+npm install
 npm start
 ```
 
