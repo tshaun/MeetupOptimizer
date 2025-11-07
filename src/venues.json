@@ -1,631 +1,842 @@
 [
   {
     "id": "v_0001",
-    "name": "Onori Top rated",
-    "category": "Japanese",
-    "lat": 1.283307,
-    "lon": 103.848362,
-    "open_windows": [
-      [
-        "2025-10-29T11:00:00+08:00",
-        "2025-10-29T22:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Japanese, $20, 0.5h"
+    "name": "Singapore Art Museum at Tanjong Pagar Distripark",
+    "lat": 1.271953,
+    "lon": 103.836752,
+    "category": "Museum",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0002",
-    "name": "Gwanghwamun Mijin",
-    "category": "Korean",
-    "lat": 1.283151,
-    "lon": 103.848803,
-    "open_windows": [
-      [
-        "2025-10-29T11:00:00+08:00",
-        "2025-10-29T22:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 90,
-    "cost_estimate_per_person": 40,
-    "tags": [],
-    "note": "Korean, $40, 1.5h"
+    "name": "Moon Rooftop Bar & Lounge Pte. Ltd.",
+    "lat": 1.274159,
+    "lon": 103.844755,
+    "category": "Bar",
+    "cost_estimate_per_person": 25.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0003",
-    "name": "Mega Adventure - Singapore",
-    "category": "food",
-    "lat": 1.255941,
-    "lon": 103.812297,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 30,
-    "tags": [],
-    "note": "Activity, $30, 2h"
+    "name": "ALLY Singapore - Maxwell",
+    "lat": 1.277588,
+    "lon": 103.845288,
+    "category": "Fitness",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0004",
-    "name": "Wild Wild Wet",
-    "category": "food",
-    "lat": 1.377595,
-    "lon": 103.954424,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 240,
-    "cost_estimate_per_person": 50,
-    "tags": [],
-    "note": "Waterpark, $50, 4h"
+    "name": "Revolution Tanjong Pagar",
+    "lat": 1.278663,
+    "lon": 103.847401,
+    "category": "Fitness",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0005",
-    "name": "Science Centre Singapore",
-    "category": "Museum",
-    "lat": 1.333169,
-    "lon": 103.735644,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T18:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 10,
-    "tags": [],
-    "note": "Museum, $10, 2h"
+    "name": "R10T",
+    "lat": 1.278446,
+    "lon": 103.848261,
+    "category": "Fitness",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0006",
-    "name": "DOPA DOPA (South Bridge Rd)",
-    "category": "Cafe",
-    "lat": 1.287803,
-    "lon": 103.848648,
-    "open_windows": [
-      [
-        "2025-10-29T08:00:00+08:00",
-        "2025-10-29T17:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Cafe, $20, 1h"
+    "name": "Lab Studios - Stanley Street | Pilates & Barre",
+    "lat": 1.280048,
+    "lon": 103.847825,
+    "category": "Fitness",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0007",
-    "name": "Genki Sushi 313@somerset",
-    "category": "food",
-    "lat": 1.300966,
-    "lon": 103.838473,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 30,
-    "tags": [],
-    "note": "Restaurant, $30, 1h"
+    "name": "Absolute Boutique Fitness Studio @ Raffles Place",
+    "lat": 1.283853,
+    "lon": 103.85197,
+    "category": "Fitness",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0008",
-    "name": "MUSEUM OF ICE CREAM SINGAPORE",
-    "category": "Museum",
-    "lat": 1.30273,
-    "lon": 103.812423,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T18:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 180,
-    "cost_estimate_per_person": 50,
-    "tags": [],
-    "note": "Museum, $50, 3h"
+    "name": "ALLY Singapore - Cross Street",
+    "lat": 1.282265,
+    "lon": 103.848892,
+    "category": "Fitness",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0009",
-    "name": "Adventure Cove Waterpark",
-    "category": "food",
-    "lat": 1.258764,
-    "lon": 103.819685,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 240,
-    "cost_estimate_per_person": 100,
-    "tags": [],
-    "note": "Waterpark, $100, 4h"
+    "name": "Love, Bonito Funan - Women's Fashion & Clothing",
+    "lat": 1.291135,
+    "lon": 103.850152,
+    "category": "Shopping",
+    "cost_estimate_per_person": 50.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0010",
-    "name": "Universal Studios Singapore",
-    "category": "food",
-    "lat": 1.254042,
-    "lon": 103.823808,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 300,
-    "cost_estimate_per_person": 100,
-    "tags": [],
-    "note": "Theme park, $100, 5h"
+    "name": "Angel Republic",
+    "lat": 1.282756,
+    "lon": 103.846575,
+    "category": "Shopping",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0011",
-    "name": "Good Bites",
+    "name": "bookstore bommoi",
+    "lat": 1.2794,
+    "lon": 103.842452,
     "category": "Cafe",
-    "lat": 1.355579,
-    "lon": 103.85133,
-    "open_windows": [
-      [
-        "2025-10-29T08:00:00+08:00",
-        "2025-10-29T17:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 30,
-    "tags": [],
-    "note": "Cafe, $30, 2h"
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0012",
-    "name": "Creamier Handcrafted Ice Cream and Coffee (Tiong Bahru)",
-    "category": "Cafe",
-    "lat": 1.282879,
-    "lon": 103.830366,
-    "open_windows": [
-      [
-        "2025-10-29T08:00:00+08:00",
-        "2025-10-29T17:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Cafe, $20, 1h"
+    "name": "Books Kinokuniya Singapore Main Store",
+    "lat": 1.302405,
+    "lon": 103.834702,
+    "category": "Shopping",
+    "cost_estimate_per_person": 15.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0013",
-    "name": "Dumpling Darlings",
-    "category": "food",
-    "lat": 1.287467,
-    "lon": 103.848812,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Chinese, $20, 1h"
+    "name": "Littered with Books",
+    "lat": 1.279537,
+    "lon": 103.843457,
+    "category": "Shopping",
+    "cost_estimate_per_person": 15.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0014",
-    "name": "La Table d\u2019Emma",
-    "category": "French",
-    "lat": 1.282983,
-    "lon": 103.846877,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 90,
-    "cost_estimate_per_person": 60,
-    "tags": [],
-    "note": "French, $60, 1.5h"
+    "name": "The Bookstore by Books Beyond Borders",
+    "lat": 1.280769,
+    "lon": 103.84541,
+    "category": "Shopping",
+    "cost_estimate_per_person": 15.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0015",
-    "name": "Scarpetta",
-    "category": "food",
-    "lat": 1.280394,
-    "lon": 103.846946,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 50,
-    "tags": [],
-    "note": "Italian, $50, 2h"
+    "name": "Sparkle Please | Crystal Workshops SG",
+    "lat": 1.277595,
+    "lon": 103.843765,
+    "category": "Shopping",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0016",
-    "name": "Suju Masayuki Mandarin Gallery",
-    "category": "Japanese",
-    "lat": 1.302106,
-    "lon": 103.836588,
-    "open_windows": [
-      [
-        "2025-10-29T11:00:00+08:00",
-        "2025-10-29T22:00:00+08:00"
-      ]
-    ],
+    "name": "The Telegraph by Olivia",
+    "lat": 1.29684,
+    "lon": 103.857483,
+    "category": "Western",
+    "cost_estimate_per_person": 50.0,
     "service_time_min": 90,
-    "cost_estimate_per_person": 50,
-    "tags": [],
-    "note": "Japanese, $50, 1.5h"
+    "opening_hours": null
   },
   {
     "id": "v_0017",
-    "name": "Hvala 111 Somerset",
-    "category": "food",
-    "lat": 1.300356,
-    "lon": 103.837982,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
+    "name": "L'\u00e9clair P\u00e2tisserie (Caf\u00e9)",
+    "lat": 1.298267,
+    "lon": 103.844008,
+    "category": "Cafe",
+    "cost_estimate_per_person": 20.0,
     "service_time_min": 60,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Matcha, $20, 1h"
+    "opening_hours": null
   },
   {
     "id": "v_0018",
-    "name": "Le Ruby Ice Cream Cafe & Bakery",
+    "name": "Ah Chew Desserts",
+    "lat": 1.298022,
+    "lon": 103.856306,
     "category": "Cafe",
-    "lat": 1.334524,
-    "lon": 103.849465,
-    "open_windows": [
-      [
-        "2025-10-29T08:00:00+08:00",
-        "2025-10-29T17:00:00+08:00"
-      ]
-    ],
+    "cost_estimate_per_person": 5.0,
     "service_time_min": 30,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Cafe, $20, 0.5h"
+    "opening_hours": null
   },
   {
     "id": "v_0019",
-    "name": "Burnt Cones Gelato (Sunset Way)",
-    "category": "food",
-    "lat": 1.322379,
-    "lon": 103.770153,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 15,
-    "tags": [],
-    "note": "Dessert, $15, 0.5h"
+    "name": "DORS at Design Orchard",
+    "lat": 1.302084,
+    "lon": 103.837787,
+    "category": "Shopping",
+    "cost_estimate_per_person": 50.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0020",
-    "name": "Citrus Kitchen",
-    "category": "food",
-    "lat": 1.288164,
-    "lon": 103.783072,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 30,
-    "tags": [],
-    "note": "Restaurant, $30, 2h"
+    "name": "The Pinnacle Sky Garden 50th Storey Skybridge",
+    "lat": 1.275734,
+    "lon": 103.841211,
+    "category": "Museum",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0021",
-    "name": "Keef The Beef Bungalow",
-    "category": "food",
-    "lat": 1.304577,
-    "lon": 103.787518,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
+    "name": "TRIFECTA - Surf, Snow, Skate in Orchard Road",
+    "lat": 1.299697,
+    "lon": 103.83902,
+    "category": "Theme Park",
+    "cost_estimate_per_person": 40.0,
     "service_time_min": 120,
-    "cost_estimate_per_person": 100,
-    "tags": [],
-    "note": "Restaurant, $100, 2h"
+    "opening_hours": null
   },
   {
     "id": "v_0022",
-    "name": "The House Bar",
-    "category": "Bar",
-    "lat": 1.304655,
-    "lon": 103.824931,
-    "open_windows": [
-      [
-        "2025-10-29T17:00:00+08:00",
-        "2025-10-30T01:00:00+08:00"
-      ]
-    ],
+    "name": "Fort Canning Centre",
+    "lat": 1.295278,
+    "lon": 103.84687,
+    "category": "Museum",
+    "cost_estimate_per_person": 0.0,
     "service_time_min": 90,
-    "cost_estimate_per_person": 100,
-    "tags": [],
-    "note": "Bar, $100, 1.5h"
+    "opening_hours": null
   },
   {
     "id": "v_0023",
-    "name": "beGIN",
-    "category": "Bar",
-    "lat": 1.285897,
-    "lon": 103.849939,
-    "open_windows": [
-      [
-        "2025-10-29T17:00:00+08:00",
-        "2025-10-30T01:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 90,
-    "cost_estimate_per_person": 60,
-    "tags": [],
-    "note": "Bar, $60, 1.5h"
+    "name": "GX-5 Extreme Swing",
+    "lat": 1.290335,
+    "lon": 103.846996,
+    "category": "Theme Park",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0024",
-    "name": "Woofie's Warehouse Thrift Store Haji Lane",
+    "name": "NearesTTen Curated Thrift Store",
+    "lat": 1.283456,
+    "lon": 103.844085,
     "category": "Thrift",
-    "lat": 1.301498,
-    "lon": 103.858298,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 30,
-    "tags": [],
-    "note": "Thrift, $30, 0.5h"
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0025",
-    "name": "THE CARTEL'S VINTAGE STORE",
-    "category": "Thrift",
-    "lat": 1.301061,
-    "lon": 103.858973,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 50,
-    "tags": [],
-    "note": "Thrift, $50, 0.5h"
+    "name": "A_Livehouse",
+    "lat": 1.292472,
+    "lon": 103.856443,
+    "category": "Bar",
+    "cost_estimate_per_person": 40.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0026",
-    "name": "National Gallery Singapore",
-    "category": "Museum",
-    "lat": 1.290222,
-    "lon": 103.851517,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T18:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Museum, $20, 2h"
+    "name": "Kyuukei Coffee | Maxwell",
+    "lat": 1.280558,
+    "lon": 103.845189,
+    "category": "Cafe",
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0027",
-    "name": "National Museum of Singapore",
-    "category": "Museum",
-    "lat": 1.296613,
-    "lon": 103.848509,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T18:00:00+08:00"
-      ]
-    ],
+    "name": "SuperPark Singapore",
+    "lat": 1.296179,
+    "lon": 103.858603,
+    "category": "Theme Park",
+    "cost_estimate_per_person": 50.0,
     "service_time_min": 120,
-    "cost_estimate_per_person": 24,
-    "tags": [],
-    "note": "Museum, $24, 2h"
+    "opening_hours": null
   },
   {
     "id": "v_0028",
-    "name": "Station by Kotuwa",
-    "category": "food",
-    "lat": 1.2814,
-    "lon": 103.848552,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 60,
-    "tags": [],
-    "note": "Dinner, $60, 2h"
+    "name": "SBCD Korean Tofu House (Millenia Walk)",
+    "lat": 1.293696,
+    "lon": 103.859406,
+    "category": "Korean",
+    "cost_estimate_per_person": 25.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0029",
-    "name": "Binge",
+    "name": "Paperbakes @ Raffles City",
+    "lat": 1.293863,
+    "lon": 103.853329,
     "category": "Cafe",
-    "lat": 1.284291,
-    "lon": 103.832981,
-    "open_windows": [
-      [
-        "2025-10-29T08:00:00+08:00",
-        "2025-10-29T17:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Cafe, $20, 1h"
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0030",
-    "name": "Birds of Paradise Gelato Boutique (Craig)",
-    "category": "food",
-    "lat": 1.277766,
-    "lon": 103.84228,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 10,
-    "tags": [],
-    "note": "Gelato, $10, 0.5h"
+    "name": "Shu Yan Sichuan Cuisine",
+    "lat": 1.285716,
+    "lon": 103.845253,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
   },
   {
     "id": "v_0031",
-    "name": "The Populus",
+    "name": "Bullock Cart Coffee (Chinatown)",
+    "lat": 1.284831,
+    "lon": 103.846041,
     "category": "Cafe",
-    "lat": 1.27825,
-    "lon": 103.840639,
-    "open_windows": [
-      [
-        "2025-10-29T08:00:00+08:00",
-        "2025-10-29T17:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 50,
-    "tags": [],
-    "note": "Cafe, $50, 1h"
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 30,
+    "opening_hours": null
   },
   {
     "id": "v_0032",
-    "name": "Bonjour Ma Cuisine",
-    "category": "French",
-    "lat": 1.278212,
-    "lon": 103.842,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 60,
-    "cost_estimate_per_person": 50,
-    "tags": [],
-    "note": "French, $50, 1h"
+    "name": "The Trend cafe-bistro",
+    "lat": 1.284438,
+    "lon": 103.845511,
+    "category": "Cafe",
+    "cost_estimate_per_person": 15.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0033",
-    "name": "The Plump Frenchman",
-    "category": "French",
-    "lat": 1.299509,
-    "lon": 103.856563,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 80,
-    "tags": [],
-    "note": "French, $80, 2h"
+    "name": "FreakyCones - Ice Cream, Waffles & Matcha",
+    "lat": 1.283554,
+    "lon": 103.845927,
+    "category": "Cafe",
+    "cost_estimate_per_person": 15.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0034",
-    "name": "New2U by SCWO",
-    "category": "Thrift",
-    "lat": 1.299556,
-    "lon": 103.851578,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 20,
-    "tags": [],
-    "note": "Thrift, $20, 0.5h"
+    "name": "Cendra Tapas Bar and Grill",
+    "lat": 1.282454,
+    "lon": 103.847214,
+    "category": "Western",
+    "cost_estimate_per_person": 40.0,
+    "service_time_min": 120,
+    "opening_hours": null
   },
   {
     "id": "v_0035",
-    "name": "Cherry Thrift Shop",
-    "category": "food",
-    "lat": 1.29245,
-    "lon": 103.850305,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 30,
-    "cost_estimate_per_person": 40,
-    "tags": [],
-    "note": "Thrifting, $40, 0.5h"
+    "name": "CAFE KREAMS",
+    "lat": 1.277524,
+    "lon": 103.84632,
+    "category": "Cafe",
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 60,
+    "opening_hours": null
   },
   {
     "id": "v_0036",
-    "name": "TEMPT",
-    "category": "food",
-    "lat": 1.296303,
-    "lon": 103.855095,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
-    "service_time_min": 120,
-    "cost_estimate_per_person": 100,
-    "tags": [],
-    "note": "Western Food, $100, 2h"
+    "name": "Brothers Ramen",
+    "lat": 1.275958,
+    "lon": 103.846215,
+    "category": "Japanese",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 90,
+    "opening_hours": null
   },
   {
     "id": "v_0037",
+    "name": "Salt & Soul",
+    "lat": 1.278513,
+    "lon": 103.847337,
+    "category": "Western",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0038",
+    "name": "UM YONG BAEK / KOREAN BBQ - TELOK AYER",
+    "lat": 1.282884,
+    "lon": 103.848821,
+    "category": "Korean",
+    "cost_estimate_per_person": 40.0,
+    "service_time_min": 90,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0039",
+    "name": "Asian Civilisations Museum",
+    "lat": 1.287497,
+    "lon": 103.851386,
+    "category": "Museum",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0040",
+    "name": "ArtScience Museum",
+    "lat": 1.286274,
+    "lon": 103.859266,
+    "category": "Museum",
+    "cost_estimate_per_person": 25.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0041",
+    "name": "Hamburg Steak Keisuke",
+    "lat": 1.27721,
+    "lon": 103.844757,
+    "category": "Japanese",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0042",
+    "name": "Five Oars Coffee Roasters Heritage",
+    "lat": 1.278956,
+    "lon": 103.844005,
+    "category": "Cafe",
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0043",
+    "name": "Noodle Star K @ Tanjong Pagar",
+    "lat": 1.279072,
+    "lon": 103.843805,
+    "category": "Korean",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 90,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0044",
+    "name": "Creamier Handcrafted Ice Cream and Coffee (Tiong Bahru)",
+    "lat": 1.282879,
+    "lon": 103.830366,
+    "category": "Cafe",
+    "cost_estimate_per_person": 15.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0045",
+    "name": "DOPA DOPA (South Bridge Rd)",
+    "lat": 1.287802,
+    "lon": 103.84865,
+    "category": "Cafe",
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0046",
     "name": "Hello Arigato Everton Park",
-    "category": "food",
     "lat": 1.276863,
     "lon": 103.840093,
-    "open_windows": [
-      [
-        "2025-10-29T10:00:00+08:00",
-        "2025-10-29T20:00:00+08:00"
-      ]
-    ],
+    "category": "Cafe",
+    "cost_estimate_per_person": 10.0,
     "service_time_min": 30,
-    "cost_estimate_per_person": 15,
-    "tags": [],
-    "note": "Matcha, $15, 0.5h"
+    "opening_hours": null
+  },
+  {
+    "id": "v_0047",
+    "name": "The Populus",
+    "lat": 1.27825,
+    "lon": 103.840639,
+    "category": "Cafe",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0048",
+    "name": "Bonjour Ma Cuisine",
+    "lat": 1.278212,
+    "lon": 103.842,
+    "category": "French",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0049",
+    "name": "Birds of Paradise Gelato Boutique (Craig)",
+    "lat": 1.277765,
+    "lon": 103.842278,
+    "category": "Cafe",
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 30,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0050",
+    "name": "National Gallery Singapore",
+    "lat": 1.290222,
+    "lon": 103.851517,
+    "category": "Museum",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0051",
+    "name": "Station by Kotuwa",
+    "lat": 1.2814,
+    "lon": 103.848552,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0052",
+    "name": "National Museum of Singapore",
+    "lat": 1.296613,
+    "lon": 103.848509,
+    "category": "Museum",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0053",
+    "name": "The House Bar",
+    "lat": 1.304655,
+    "lon": 103.824931,
+    "category": "Bar",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 90,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0054",
+    "name": "Keef The Beef Bungalow",
+    "lat": 1.304577,
+    "lon": 103.787518,
+    "category": "Western",
+    "cost_estimate_per_person": 100.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0055",
+    "name": "Burnt Cones Gelato (Sunset Way)",
+    "lat": 1.322379,
+    "lon": 103.770153,
+    "category": "Cafe",
+    "cost_estimate_per_person": 15.0,
+    "service_time_min": 30,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0056",
+    "name": "Citrus Kitchen",
+    "lat": 1.288164,
+    "lon": 103.783072,
+    "category": "Western",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0057",
+    "name": "Hvala 111 Somerset",
+    "lat": 1.300356,
+    "lon": 103.837982,
+    "category": "Cafe",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0058",
+    "name": "Universal Studios Singapore",
+    "lat": 1.254042,
+    "lon": 103.823808,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0059",
+    "name": "Genki Sushi 313@somerset",
+    "lat": 1.300966,
+    "lon": 103.838473,
+    "category": "Japanese",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0060",
+    "name": "Adventure Cove Waterpark",
+    "lat": 1.258764,
+    "lon": 103.819685,
+    "category": "Theme Park",
+    "cost_estimate_per_person": 50.0,
+    "service_time_min": 240,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0061",
+    "name": "Mega Adventure - Singapore",
+    "lat": 1.255941,
+    "lon": 103.812297,
+    "category": "Theme Park",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0062",
+    "name": "Gwanghwamun Mijin",
+    "lat": 1.283151,
+    "lon": 103.848803,
+    "category": "Korean",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 90,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0063",
+    "name": "Wild Wild Wet",
+    "lat": 1.377595,
+    "lon": 103.954424,
+    "category": "Theme Park",
+    "cost_estimate_per_person": 50.0,
+    "service_time_min": 240,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0064",
+    "name": "Maxwell MRT Station (TE18)",
+    "lat": 1.280689,
+    "lon": 103.844087,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0065",
+    "name": "APT - A Place To \u2022 Coffee \u2022 Cocktail",
+    "lat": 1.278232,
+    "lon": 103.843852,
+    "category": "Bar",
+    "cost_estimate_per_person": 25.0,
+    "service_time_min": 60,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0066",
+    "name": "Somerset MRT Station (NS23)",
+    "lat": 1.300584,
+    "lon": 103.838537,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0067",
+    "name": "Promenade MRT Station (DT15)",
+    "lat": 1.294034,
+    "lon": 103.860359,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0068",
+    "name": "Tanjong Pagar MRT Station (EW15)",
+    "lat": 1.276771,
+    "lon": 103.845166,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0069",
+    "name": "Outram Park MRT Station (EW16)",
+    "lat": 1.281427,
+    "lon": 103.83918,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0070",
+    "name": "Clarke Quay MRT Station (NE5)",
+    "lat": 1.288161,
+    "lon": 103.846699,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0071",
+    "name": "Dhoby Ghaut MRT Station (NS24)",
+    "lat": 1.298655,
+    "lon": 103.846461,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0072",
+    "name": "Telok Ayer MRT Station (DT18)",
+    "lat": 1.281767,
+    "lon": 103.848919,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0073",
+    "name": "Bugis MRT Station (EW12)",
+    "lat": 1.299315,
+    "lon": 103.855185,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0074",
+    "name": "Science Centre Singapore",
+    "lat": 1.333169,
+    "lon": 103.735644,
+    "category": "Museum",
+    "cost_estimate_per_person": 10.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0075",
+    "name": "MUSEUM OF ICE CREAM SINGAPORE",
+    "lat": 1.352083,
+    "lon": 103.819836,
+    "category": "Museum",
+    "cost_estimate_per_person": 50.0,
+    "service_time_min": 180,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0076",
+    "name": "Dumpling Darlings",
+    "lat": 1.287481,
+    "lon": 103.848765,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0077",
+    "name": "La Table d\u2019Emma",
+    "lat": 1.282983,
+    "lon": 103.846877,
+    "category": "French",
+    "cost_estimate_per_person": 60.0,
+    "service_time_min": 90,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0078",
+    "name": "Suju Masayuki Mandarin Gallery",
+    "lat": 1.302106,
+    "lon": 103.836588,
+    "category": "Japanese",
+    "cost_estimate_per_person": 50.0,
+    "service_time_min": 90,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0079",
+    "name": "Le Ruby Ice Cream Cafe & Bakery",
+    "lat": 1.334524,
+    "lon": 103.849465,
+    "category": "Cafe",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 30,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0080",
+    "name": "Woofie's Warehouse Thrift Store Haji Lane",
+    "lat": 1.301498,
+    "lon": 103.858298,
+    "category": "Thrift",
+    "cost_estimate_per_person": 30.0,
+    "service_time_min": 30,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0081",
+    "name": "THE CARTEL'S VINTAGE STORE",
+    "lat": 1.301061,
+    "lon": 103.858973,
+    "category": "Thrift",
+    "cost_estimate_per_person": 50.0,
+    "service_time_min": 30,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0082",
+    "name": "The Plump Frenchman",
+    "lat": 1.299509,
+    "lon": 103.856563,
+    "category": "French",
+    "cost_estimate_per_person": 80.0,
+    "service_time_min": 120,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0083",
+    "name": "New2U by SCWO",
+    "lat": 1.299556,
+    "lon": 103.851578,
+    "category": "Thrift",
+    "cost_estimate_per_person": 20.0,
+    "service_time_min": 30,
+    "opening_hours": null
+  },
+  {
+    "id": "v_0084",
+    "name": "Cherry Thrift Shop",
+    "lat": 1.292287,
+    "lon": 103.85085,
+    "category": "MRT",
+    "cost_estimate_per_person": 0.0,
+    "service_time_min": 0,
+    "opening_hours": null
   }
 ]
