@@ -21,6 +21,8 @@ export default function RoutePlanner() {
   const [categories, setCategories] = useState([]);
   const [fairness, setFairness] = useState(0.5);
   const [strictFairness, setStrictFairness] = useState(false);
+  const [meetDate, setMeetDate] = useState("");
+  const [meetTime, setMeetTime] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [refresh, setRefresh] = useState(0);
@@ -32,6 +34,8 @@ export default function RoutePlanner() {
     categories: useDebouncedValue(categories),
     fairness: useDebouncedValue(fairness),
   strictFairness: useDebouncedValue(strictFairness),
+    meetDate: useDebouncedValue(meetDate),
+    meetTime: useDebouncedValue(meetTime),
     start: useDebouncedValue(start),
     end: useDebouncedValue(end),
   };
@@ -76,6 +80,8 @@ export default function RoutePlanner() {
       p.set("fairness", String(debounced.fairness));
     }
     if (debounced.categories?.length) p.set("categories", debounced.categories.join(","));
+  if (debounced.meetDate) p.set("meet_date", debounced.meetDate);
+  if (debounced.meetTime) p.set("meet_time", debounced.meetTime);
     if (debounced.start) p.set("start", debounced.start);
     if (debounced.end) p.set("end", debounced.end);
     try { p.set("prefs", JSON.stringify(prefsList)); } catch {}
@@ -286,6 +292,16 @@ export default function RoutePlanner() {
                 <div className="labelrow"><span>Time limit (minutes)</span><span className="muted">{timeLimit}</span></div>
                 <input className="input" type="number" value={timeLimit} min={0} onChange={e=>setTimeLimit(Number(e.target.value))}/>
               </div>
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:8}}>
+                <div>
+                  <div className="labelrow" style={{justifyContent:"flex-start"}}><span>Meet date</span></div>
+                  <input className="input" type="date" value={meetDate} onChange={e=>setMeetDate(e.target.value)} />
+                </div>
+                <div>
+                  <div className="labelrow" style={{justifyContent:"flex-start"}}><span>Meet start time</span></div>
+                  <input className="input" type="time" value={meetTime} onChange={e=>setMeetTime(e.target.value)} />
+                </div>
+              </div>
               <div>
                 <div className="labelrow"><span>Group size</span><span className="muted">{groupSize}</span></div>
                 <input className="input" type="number" value={groupSize} min={1} onChange={e=>setGroupSize(Number(e.target.value))}/>
@@ -434,23 +450,52 @@ export default function RoutePlanner() {
                   <span>⏱ <b>{routeData?.total_time ?? "—"}</b> min</span>
                   <span>💸 <b>${routeData?.total_cost ?? "—"}</b></span>
                   <span>🛑 <b>{routeData?.route?.length ?? 0}</b></span>
+                  {routeData?.solver_start_time && (
+                    <span>🕒 <b>{new Date(routeData.solver_start_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</b>
+                      {routeData?.solver_end_time ? ` → ${new Date(routeData.solver_end_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}` : ''}
+                    </span>
+                  )}
+                  {routeData?.travel_mode && (
+                    <span>🚶 <b>{routeData.travel_mode}</b></span>
+                  )}
                 </div>
               </div>
               <div className="results">
                 {err && <div style={{color:"var(--red)", marginBottom:8, fontSize:12}}>{err}</div>}
                 {routeData && routeData.route?.length ? (
                   <ul className="list">
-                    {routeData.route.map((v, i) => (
-                      <li key={v.id ?? `${v.lat},${v.lon},${i}`} className="row">
-                        <div className="bullet">{i + 1}.</div>
-                        <div>
-                          <div style={{fontWeight:600}}>{v.name}</div>
-                          <div className="muted" style={{fontSize:12}}>
-                            {v.category} · {v.service_time_min} min
+                    {routeData.route.map((v, i) => {
+                      // align schedule entry by position (same order as final_route)
+                      const sched = Array.isArray(routeData.route_schedule) ? routeData.route_schedule[i] : null;
+                      const arr = sched ? new Date(sched.arrival_time) : null;
+                      const lea = sched ? new Date(sched.leave_time) : null;
+                      const legMin = Array.isArray(routeData.route_travel_minutes) ? routeData.route_travel_minutes[i] : null;
+                      return (
+                        <li key={v.id ?? `${v.lat},${v.lon},${i}`} className="row" style={{alignItems:"flex-start"}}>
+                          <div className="bullet">{i + 1}.</div>
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:600, display:"flex", justifyContent:"space-between", gap:8}}>
+                              <span>{v.name}</span>
+                              {arr && lea && (
+                                <span className="muted" style={{fontSize:11}}>
+                                  {arr.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                                  {" → "}
+                                  {lea.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                                </span>
+                              )}
+                            </div>
+                            {i > 0 && typeof legMin === 'number' && (
+                              <div className="muted" style={{fontSize:11, marginTop:2}}>
+                                🚶 {legMin} min walk
+                              </div>
+                            )}
+                            <div className="muted" style={{fontSize:12}}>
+                              {v.category} · {v.service_time_min} min
+                            </div>
                           </div>
-                        </div>
-                      </li>
-                    ))}
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <div className="muted">{

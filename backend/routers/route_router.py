@@ -255,7 +255,14 @@ def get_plan(
     enable_embeddings: bool = Query(True, description="Use semantic diversity model if available"),
     sim_threshold: float = Query(0.8, ge=-1.0, le=1.0, description="Cosine similarity threshold for semantic penalty"),
     semantic_penalty: float = Query(0.3, ge=0.0, le=1.0, description="Multiplier applied when similarity exceeds threshold"),
-    fairness_profile: Optional[str] = Query(None, description="Optional preset: 'balanced' or 'strict' (overrides slider)")
+    fairness_profile: Optional[str] = Query(None, description="Optional preset: 'balanced' or 'strict' (overrides slider)"),
+    meet_date: Optional[str] = Query(None, description="Meetup date YYYY-MM-DD"),
+    meet_time: Optional[str] = Query(None, description="Meetup start time HH:MM (24h)"),
+    meet_tz: Optional[str] = Query("+08:00", description="Timezone offset like +08:00; default Asia/Singapore"),
+    # Default inflated walking multiplier to counter optimistic straight-line estimates.
+    walk_multiplier: float = Query(1.6, ge=0.25, le=5.0, description="Scale all travel minutes (default 1.6 to deflate optimistic walking times)"),
+    transfer_buffer_min: float = Query(0.0, ge=0.0, le=15.0, description="Optional per-leg buffer minutes added before rounding"),
+    travel_rounding: str = Query("ceil", description="ceil | round | none for schedule/feasibility travel rounding")
 ):
     try:
         full_venues, full_tm = _load_base_data()
@@ -317,6 +324,12 @@ def get_plan(
         # Solve on the filtered problem if we filtered; else on the full set
         v_for_solver = venues_flt or full_venues
         tm_for_solver = tm_flt if venues_flt is not None and keep_map else full_tm
+        # Apply walking multiplier to travel matrix without mutating cache
+        if walk_multiplier and abs(walk_multiplier - 1.0) > 1e-6:
+            tm_for_solver = [
+                [float(x) * float(walk_multiplier) for x in row]
+                for row in tm_for_solver
+            ]
         embeddings_for_solver = _slice_embeddings(embeddings_full, keep_map) if embeddings_full is not None else None
 
         # parse inline prefs JSON if provided
@@ -365,6 +378,20 @@ def get_plan(
                 plan_kwargs['fairness_mode'] = 'marginal'
                 plan_kwargs['fairness_group_aggregator'] = 'nash'
 
+        # Build absolute start timestamp if provided
+        meet_start_iso = None
+        if meet_date and meet_time:
+            # basic sanitize
+            d = meet_date.strip()
+            t = meet_time.strip()
+            tz = (meet_tz or "+08:00").strip()
+            if len(t) == 5:  # HH:MM
+                t = f"{t}:00"
+            if tz and (tz.startswith("+") or tz.startswith("-")) and len(tz) in (6, 9):
+                meet_start_iso = f"{d}T{t}{tz}"
+            else:
+                meet_start_iso = f"{d}T{t}"
+
         result = plan_route(
             v_for_solver,
             tm_for_solver,
@@ -374,6 +401,9 @@ def get_plan(
             embeddings=embeddings_for_solver,
             sim_threshold=sim_threshold,
             semantic_penalty=semantic_penalty,
+            transfer_buffer_min=transfer_buffer_min,
+            travel_rounding=travel_rounding,
+            meet_start_iso=meet_start_iso,
             **plan_kwargs,
         )
     except Exception as e:
@@ -407,6 +437,9 @@ def get_plan(
             "start": _parse_latlon(start),
             "end": _parse_latlon(end),
             "source": "solver",
+            "walk_multiplier": walk_multiplier,
+            "transfer_buffer_min": transfer_buffer_min,
+            "travel_rounding": travel_rounding,
         },
     }
     # surface any extra keys from the solver except ones we overwrite

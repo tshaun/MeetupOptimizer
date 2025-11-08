@@ -1,4 +1,4 @@
-from math import inf, log, exp
+from math import inf, log, exp, ceil
 from collections import Counter
 
 def plan_route(
@@ -7,6 +7,9 @@ def plan_route(
     *,
     time_limit=360,
     budget=80,
+    meet_start_iso: str | None = None,  # ISO timestamp with timezone, e.g. "2025-10-29T18:00:00+08:00"
+    transfer_buffer_min: float = 0.0,    # minimum handoff buffer in minutes (applied to raw travel); 0 = none
+    travel_rounding: str = "ceil",       # how to round travel for schedule/feasibility: 'ceil' | 'round' | 'none'
     prefs=None,               # backward compat: single or list aggregated into people_prefs
     people_prefs=None,        # new: list[dict[str,float]] per-person preferences (lowercased keys)
     base_reward=10.0,
@@ -30,6 +33,15 @@ def plan_route(
     Greedy planner with hard time/budget caps.
     Returns dict with route indices, names, total time, total cost.
     """
+    # optional absolute start time support
+    meet_start_dt = None
+    try:
+        if meet_start_iso:
+            # Prefer fromisoformat; if it fails, leave as None
+            from datetime import datetime
+            meet_start_dt = datetime.fromisoformat(meet_start_iso)
+    except Exception:
+        meet_start_dt = None
 
     # --- defaults ---
     default_prefs = {
@@ -181,6 +193,61 @@ def plan_route(
     def within_time(cum_time, travel, stay):
         return cum_time + travel + stay <= time_limit
 
+    # --- time window helpers (absolute time) ---
+    def _parse_open_windows(v):
+        """Return list of (start_dt, end_dt) or empty list if none/invalid.
+        Expects v.get('open_windows') as list of [start_iso, end_iso] pairs.
+        """
+        wins = v.get("open_windows") or v.get("opening_hours")  # allow future/backward field names
+        if not wins:
+            return []
+        pairs = []
+        from datetime import datetime
+        for item in wins:
+            try:
+                if isinstance(item, (list, tuple)) and len(item) == 2:
+                    a = datetime.fromisoformat(str(item[0]))
+                    b = datetime.fromisoformat(str(item[1]))
+                    if b > a:
+                        pairs.append((a, b))
+            except Exception:
+                continue
+        return pairs
+
+    def _is_within_window(v, arrival_min: float, leave_min: float) -> bool:
+        """Check if arrival/leave (mins offset from meet_start) fit some open window.
+        If no windows or no meet_start specified, treat as always open.
+        """
+        if meet_start_dt is None:
+            return True
+        wins = _parse_open_windows(v)
+        if not wins:
+            return True
+        from datetime import timedelta
+        arr_dt = meet_start_dt + timedelta(minutes=float(arrival_min))
+        leave_dt = meet_start_dt + timedelta(minutes=float(leave_min))
+        for a, b in wins:
+            if a <= arr_dt and leave_dt <= b:
+                return True
+        return False
+
+    # --- travel helper applying minimum/ceil for schedule feasibility ---
+    def _travel_minutes(a: int, b: int) -> float:
+        if not (0 <= a < len(tm) and 0 <= b < len(tm)):
+            base = 0.0
+        try:
+            raw = float(tm[a][b])
+        except Exception:
+            raw = 0.0
+        base = max(raw, float(transfer_buffer_min))
+        mode = (travel_rounding or "ceil").lower()
+        if mode == "ceil":
+            return float(ceil(base))
+        if mode == "round":
+            return float(round(base))
+        # 'none' or unknown
+        return float(base)
+
     # -------- prefilter: nuke impossible single stops --------
     feasible_indices = [
         i for i, v in enumerate(venues)
@@ -196,6 +263,10 @@ def plan_route(
         # seed must fit time & budget on its own
         if stay > time_limit or venue_cost(j) > budget:
             continue
+        # absolute time: seed arrival=0, leave=stay must satisfy any window
+        if meet_start_dt is not None:
+            if not _is_within_window(venues[j], 0.0, stay):
+                continue
         # seed score: reward adjusted by price and "time pain"
         cat = str(venues[j].get("category", "unknown")).strip().lower()
         reward = fairness_score_for_cat(cat, [])
@@ -262,16 +333,23 @@ def plan_route(
             # quick reject if single venue can't fit even from a fresh start
             if stay > time_limit:
                 continue
-            # travel from current
+            # travel from current (raw for scoring; effective for timing)
             travel = float(tm[current][j]) if 0 <= current < n and 0 <= j < n else inf
+            travel_eff = _travel_minutes(current, j)
             if travel == inf:
                 continue
 
             # hard caps
             if not feasible_cost(current_cost, j):
                 continue
-            if not within_time(time_spent, travel, stay):
+            if not within_time(time_spent, travel_eff, stay):
                 continue
+            # absolute time feasibility: arrival/leave must be within a window if provided
+            if meet_start_dt is not None:
+                arrival = time_spent + travel_eff
+                leave = arrival + stay
+                if not _is_within_window(venues[j], arrival, leave):
+                    continue
 
             # scoring
             cat = str(venues[j].get("category", "unknown")).strip().lower()
@@ -316,11 +394,16 @@ def plan_route(
         if best_next is None:
             break
 
-        travel_time = float(tm[current][best_next])
+        travel_time = _travel_minutes(current, best_next)
         stay_time = int(venues[best_next].get("service_time_min", 60) or 60)
 
         if not within_time(time_spent, travel_time, stay_time):
             break
+        if meet_start_dt is not None:
+            arrival = time_spent + travel_time
+            leave = arrival + stay_time
+            if not _is_within_window(venues[best_next], arrival, leave):
+                break
 
         visited.add(best_next)
         route.append(best_next)
@@ -341,7 +424,7 @@ def plan_route(
             stay = int(venues[idx].get("service_time_min", 60) or 60)
             if i > 0:
                 prev = order[i - 1]
-                travel = float(tm[prev][idx] if 0 <= prev < len(tm) and 0 <= idx < len(tm) else 0.0)
+                travel = _travel_minutes(prev, idx)
                 total += travel
             total += stay
         return int(round(total))
@@ -362,6 +445,24 @@ def plan_route(
             final_route = smooth_route(final_route, venues, tm, time_limit=time_limit)
         except Exception:
             # if smoothing fails for any reason, fall back to original order
+            final_route = list(route)
+
+    # If absolute time is enabled, verify smoothed route still meets windows; else fallback
+    if meet_start_dt is not None and len(final_route) >= 2:
+        def _route_valid(order):
+            t = 0.0
+            for i, idx in enumerate(order):
+                stay = int(venues[idx].get("service_time_min", 60) or 60)
+                if i > 0:
+                    prev = order[i-1]
+                    t += _travel_minutes(prev, idx)
+                arr = t
+                lea = t + stay
+                if not _is_within_window(venues[idx], arr, lea):
+                    return False
+                t = lea
+            return True
+        if not _route_valid(final_route) and _route_valid(route):
             final_route = list(route)
 
     total_time = _compute_total_time(final_route)
@@ -388,11 +489,52 @@ def plan_route(
     nash_utility = exp(sum_logs / max(len(person_cum_utils), 1))
     final_aggregated = _aggregate(person_cum_utils, utility_aggregator)
 
+    # Build optional schedule with real clock times if meet_start is provided
+    solver_start_time = None
+    solver_end_time = None
+    route_schedule = None
+    if meet_start_dt is not None:
+        from datetime import timedelta
+        t = 0.0
+        sched = []
+        per_leg_travel = []
+        for i, idx in enumerate(final_route):
+            stay = int(venues[idx].get("service_time_min", 60) or 60)
+            if i > 0:
+                prev = final_route[i-1]
+                leg = _travel_minutes(prev, idx)
+                per_leg_travel.append(float(leg))
+                t += leg
+            else:
+                per_leg_travel.append(0.0)
+            arr_dt = meet_start_dt + timedelta(minutes=float(t))
+            lea_dt = arr_dt + timedelta(minutes=float(stay))
+            sched.append({
+                "index": idx,
+                "id": venues[idx].get("id"),
+                "name": venues[idx].get("name"),
+                "arrival_time": arr_dt.isoformat(),
+                "leave_time": lea_dt.isoformat(),
+            })
+            t += stay
+        route_schedule = sched
+        solver_start_time = meet_start_dt.isoformat()
+        if sched:
+            solver_end_time = sched[-1]["leave_time"]
+    else:
+        per_leg_travel = None
+
     return {
         "route_indices": final_route,
         "route_names": [venues[i]["name"] for i in final_route],
         "total_time": int(total_time),
         "total_cost": int(total_cost),
+        # absolute time outputs
+        "solver_start_time": solver_start_time,
+        "solver_end_time": solver_end_time,
+        "route_schedule": route_schedule,
+        "route_travel_minutes": per_leg_travel,
+        "travel_mode": "walking",
         # telemetry
         "solver_total_travel": float(total_travel),
         "solver_per_leg_travel": float(per_leg),
