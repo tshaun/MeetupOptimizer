@@ -23,8 +23,10 @@ export default function RoutePlanner() {
   const [strictFairness, setStrictFairness] = useState(false);
   const [meetDate, setMeetDate] = useState("");
   const [meetTime, setMeetTime] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
+  // legacy start/end lat,lon removed in favor of anchor indices
+  // anchor indices (solver-space) – using filtered venues indices after categories applied.
+  const [startIdx, setStartIdx] = useState("");
+  const [endIdx, setEndIdx] = useState("");
   const [refresh, setRefresh] = useState(0);
 
   const debounced = {
@@ -36,11 +38,13 @@ export default function RoutePlanner() {
   strictFairness: useDebouncedValue(strictFairness),
     meetDate: useDebouncedValue(meetDate),
     meetTime: useDebouncedValue(meetTime),
-    start: useDebouncedValue(start),
-    end: useDebouncedValue(end),
+  // legacy start/end removed
+    startIdx: useDebouncedValue(startIdx),
+    endIdx: useDebouncedValue(endIdx),
   };
   // dynamic category options fetched from backend
   const [catOptions, setCatOptions] = useState([]);
+  const [venueOptions, setVenueOptions] = useState([]); // filtered venue list for anchor dropdowns
   const defaultPrefs = useMemo(() => Object.fromEntries(catOptions.map(c => [c, 1.0])), [catOptions]);
 
   const [prefsList, setPrefsList] = useState(() =>
@@ -82,8 +86,9 @@ export default function RoutePlanner() {
     if (debounced.categories?.length) p.set("categories", debounced.categories.join(","));
   if (debounced.meetDate) p.set("meet_date", debounced.meetDate);
   if (debounced.meetTime) p.set("meet_time", debounced.meetTime);
-    if (debounced.start) p.set("start", debounced.start);
-    if (debounced.end) p.set("end", debounced.end);
+  // lat/lon anchors removed; using start_idx/end_idx instead
+    if (debounced.startIdx) p.set("start_idx", debounced.startIdx);
+    if (debounced.endIdx) p.set("end_idx", debounced.endIdx);
     try { p.set("prefs", JSON.stringify(prefsList)); } catch {}
     if (refresh) p.set("refresh", String(refresh));
     return p.toString();
@@ -132,6 +137,31 @@ export default function RoutePlanner() {
     })();
     return () => { cancel = true; };
   }, [refresh]);
+
+  // fetch filtered venues for anchor dropdowns (depends on categories)
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const p = new URLSearchParams();
+        if (categories?.length) p.set("categories", categories.join(","));
+        const r = await fetch(`http://localhost:8000/plan/venues?${p.toString()}`);
+        if (!r.ok) throw new Error(await r.text());
+        const j = await r.json();
+        if (!cancel) {
+          const list = Array.isArray(j.venues) ? j.venues : [];
+          setVenueOptions(list);
+          // reset anchors if they no longer exist in the new filtered list
+          const maxIndex = list.length - 1;
+          if (startIdx && (isNaN(Number(startIdx)) || Number(startIdx) > maxIndex)) setStartIdx("");
+          if (endIdx && (isNaN(Number(endIdx)) || Number(endIdx) > maxIndex)) setEndIdx("");
+        }
+      } catch (e) {
+        if (!cancel) setVenueOptions([]);
+      }
+    })();
+    return () => { cancel = true; };
+  }, [categories, refresh]);
 
   // ------- INGESTION -------
   const [uploadBusy, setUploadBusy] = useState(false);
@@ -337,13 +367,30 @@ export default function RoutePlanner() {
           <span>Group fun</span><span>{strictFairness ? "Strict balance (opt-in)" : "More even experience"}</span>
         </div>
               </div>
-              <div>
-                <div className="labelrow" style={{justifyContent:"flex-start"}}><span>Start (lat, lon)</span></div>
-                <input className="input" placeholder="1.3000,103.8000" value={start} onChange={e=>setStart(e.target.value)}/>
-              </div>
-              <div>
-                <div className="labelrow" style={{justifyContent:"flex-start"}}><span>End (lat, lon)</span></div>
-                <input className="input" placeholder="(optional)" value={end} onChange={e=>setEnd(e.target.value)}/>
+              {/* Removed lat/lon inputs; anchors are chosen via dropdowns below */}
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:8}}>
+                <div>
+                  <div className="labelrow" style={{justifyContent:"flex-start"}}><span>Start anchor (idx)</span></div>
+                  <select className="input" value={startIdx} onChange={e=>setStartIdx(e.target.value)}>
+                    <option value="">auto</option>
+                    {venueOptions.map(v => (
+                      <option key={v.id ?? v.index} value={String(v.index)}>
+                        {v.index}. {v.name} {v.category ? `· ${v.category}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <div className="labelrow" style={{justifyContent:"flex-start"}}><span>End anchor (idx)</span></div>
+                  <select className="input" value={endIdx} onChange={e=>setEndIdx(e.target.value)}>
+                    <option value="">auto</option>
+                    {venueOptions.map(v => (
+                      <option key={v.id ?? v.index} value={String(v.index)}>
+                        {v.index}. {v.name} {v.category ? `· ${v.category}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </section>

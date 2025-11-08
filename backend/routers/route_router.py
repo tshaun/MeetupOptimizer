@@ -259,6 +259,8 @@ def get_plan(
     meet_date: Optional[str] = Query(None, description="Meetup date YYYY-MM-DD"),
     meet_time: Optional[str] = Query(None, description="Meetup start time HH:MM (24h)"),
     meet_tz: Optional[str] = Query("+08:00", description="Timezone offset like +08:00; default Asia/Singapore"),
+    start_idx: Optional[int] = Query(None, description="Index into filtered venues list to force as start anchor"),
+    end_idx: Optional[int] = Query(None, description="Index into filtered venues list to force as end anchor"),
     # Default inflated walking multiplier to counter optimistic straight-line estimates.
     walk_multiplier: float = Query(1.6, ge=0.25, le=5.0, description="Scale all travel minutes (default 1.6 to deflate optimistic walking times)"),
     transfer_buffer_min: float = Query(0.0, ge=0.0, le=15.0, description="Optional per-leg buffer minutes added before rounding"),
@@ -397,6 +399,8 @@ def get_plan(
             tm_for_solver,
             budget=effective_budget,
             time_limit=time_limit,
+            start_idx=start_idx,
+            end_idx=end_idx,
             prefs=prefs_map,
             embeddings=embeddings_for_solver,
             sim_threshold=sim_threshold,
@@ -462,3 +466,27 @@ def list_categories():
     }
     out = sorted(c for c in cats if c)
     return out
+
+@router.get("/venues")
+def list_filtered_venues(categories: Optional[str] = Query(None, description="Comma-separated categories to include")):
+    """Return the filtered venues list (names + minimal fields) and their filtered indices.
+
+    This mirrors the filtering used by /plan so clients can present anchors (start_idx/end_idx)
+    using indices into the filtered set.
+    """
+    try:
+        full_venues, full_tm = _load_base_data()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load base data: {e}")
+    cats = _parse_categories(categories)
+    venues_flt, tm_flt, keep_map = _slice_by_categories(full_venues, full_tm, cats)
+    vlist = venues_flt or full_venues
+    out = []
+    for i, v in enumerate(vlist):
+        out.append({
+            "index": i,
+            "id": v.get("id"),
+            "name": v.get("name"),
+            "category": v.get("category"),
+        })
+    return {"venues": out, "count": len(out)}
