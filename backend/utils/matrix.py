@@ -17,7 +17,7 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 def compute_matrix_minutes(
-    venues: Sequence[dict], *, speed_kmh: float = 25.0
+    venues: Sequence[dict], *, speed_kmh: float = 5
 ) -> List[List[float]]:
     """
     Compute a symmetric NxN matrix of travel time minutes using haversine distance

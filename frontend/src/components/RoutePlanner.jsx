@@ -149,7 +149,8 @@ export default function RoutePlanner() {
         if (!r.ok) throw new Error(await r.text());
         const j = await r.json();
         if (!cancel) {
-          const list = Array.isArray(j.venues) ? j.venues : [];
+          const list = Array.isArray(j.venues) ? j.venues.filter(v => v.category === "MRT") : [];
+          console.log("List",list)
           setVenueOptions(list);
           // reset anchors if they no longer exist in the new filtered list
           const maxIndex = list.length - 1;

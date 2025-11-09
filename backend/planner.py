@@ -18,7 +18,7 @@ def plan_route(
     diversity_penalty=0.6,
     cost_beta=0.4,
     fatigue_decay=0.03,   # deprecated (kept for backward compat); fatigue now tied to remaining time
-    variety_penalty=0.2,
+    variety_penalty=0.1,
     apply_smoothing=True,
     enable_category_boosts=True,
     travel_divisor_k=1.0,
@@ -116,6 +116,8 @@ def plan_route(
 
     people_list = _normalize_people(people_prefs, prefs)
     num_people = len(people_list)
+    budget = budget * num_people
+    print("budget", budget)
     # clamp variety penalty to a safe range
     try:
         variety_penalty = float(variety_penalty)
@@ -611,12 +613,14 @@ def smooth_route(route_indices, venues, tm, *, time_limit=None, max_iters=50, la
 
     def compute_total_time(order):
         # compute total time = sum(stays) + sum(travel between consecutive stops)
+        print("Compute total travel time")
         total = 0.0
         for i, idx in enumerate(order):
             stay = int(venues[idx].get("service_time_min", 60) or 60)
             if i > 0:
                 prev = order[i - 1]
                 travel = float(tm[prev][idx] if 0 <= prev < len(tm) and 0 <= idx < len(tm) else 0.0)
+                print(tm[prev][idx])
                 total += travel
             total += stay
         return int(round(total))
@@ -635,30 +639,42 @@ def smooth_route(route_indices, venues, tm, *, time_limit=None, max_iters=50, la
         # desired phase (0=early ... 1=late)
         desired_phase = {
             "museum": 0.2,
-            "park": 0.2,
+            "theme park": 0.2,
             "cafe": 0.35,
             "thrift": 0.4,
-            "food": 0.5,
-            "activity": 0.6,
+            "korean": 0.5,
+            "japanese": 0.5,
+            "french": 0.5,
+            "shopping": 0.6,
             "bar": 0.95,
+            "fitness": 0.6,
         }
         phase_weight = {
             "museum": 1.0,
-            "park": 0.6,
+            "theme park": 0.6,
             "cafe": 0.9,
             "thrift": 0.8,
-            "food": 1.0,
+            "korean": 1.0,
+            "japanese": 1.0,
+            "french": 1.0,
             "activity": 0.8,
             "bar": 1.2,
         }
 
         # transition bonuses for nice sequences
         transition_bonus = {
-            ("thrift", "food"): 1.2,
-            ("food", "bar"): 1.4,
+            ("thrift", "cafe"): 1.2,
+            ( "cafe","thrift"): 1.2,
+            ("korean", "bar"): 1.4,
+            ("japanese", "bar"): 1.4,
+            ("french", "bar"): 1.4,
             ("thrift", "bar"): 0.6,
             ("cafe", "bar"): 0.8,
             ("museum", "cafe"): 0.4,
+            ( "cafe","museum",): 1.1,
+            ( "cafe","shopping",): 1.1,
+            ( "shopping","cafe",): 1.2,
+            ( "fitness","cafe",): 1.2,
         }
 
         for i, idx in enumerate(route):
