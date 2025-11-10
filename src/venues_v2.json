@@ -495,7 +495,7 @@
   {
     "id": "v_0030",
     "name": "Shu Yan Sichuan Cuisine",
-    "category": "MRT",
+    "category": "Japanese",
     "lat": 1.285716,
     "lng": 103.845253,
     "open_windows": [
@@ -852,7 +852,7 @@
   {
     "id": "v_0051",
     "name": "Station by Kotuwa",
-    "category": "MRT",
+    "category": "Cafe",
     "lat": 1.2814,
     "lng": 103.848552,
     "open_windows": [
@@ -1277,7 +1277,7 @@
   {
     "id": "v_0076",
     "name": "Dumpling Darlings",
-    "category": "MRT",
+    "category": "Japanese",
     "lat": 1.287481,
     "lng": 103.848765,
     "open_windows": [
@@ -1413,7 +1413,7 @@
   {
     "id": "v_0084",
     "name": "Cherry Thrift Shop",
-    "category": "MRT",
+    "category": "Thrift",
     "lat": 1.292287,
     "lng": 103.85085,
     "open_windows": [
